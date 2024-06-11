@@ -12,6 +12,22 @@ export function GachaSummary() {
 
    const summary = getSummary(loaderData);
 
+   // set average pity rate as fiveStarPity, which is average of roll.pity in summary.fiveStars
+   const fiveStarPity = Math.floor(
+      summary.fiveStars.reduce(
+         (acc: number, curr: RollData) => acc + (curr.pity ?? 80),
+         0,
+      ) / summary.fiveStars.length || 80,
+   );
+
+   // set average pity rate as fourStarPity, which is average of roll.pity in summary.fourStars
+   const fourStarPity = Math.floor(
+      summary.fourStars.reduce(
+         (acc: number, curr: RollData) => acc + (curr.pity ?? 10),
+         0,
+      ) / summary.fourStars.length || 10,
+   );
+
    console.log(summary);
 
    return (
@@ -41,35 +57,35 @@ export function GachaSummary() {
                      <span>{summary.weapons}</span>
                   </div>
                   <div className="flex gap-x-2">
-                     <span className="font-bold">5*:</span>
-                     <span>{summary.fiveStarPulls.length}</span>
+                     <span className="font-bold">5* Convenes:</span>
+                     <span>{summary.fiveStars.length}</span>
                   </div>
                   <div className="flex gap-x-2">
-                     <span className="font-bold">4*:</span>
-                     <span>{summary.fourStarPulls.length}</span>
+                     <span className="font-bold">4* Convenes:</span>
+                     <span>{summary.fourStars.length}</span>
+                  </div>
+                  <div className="flex gap-x-2">
+                     <span className="font-bold">Avg 5* Pity:</span>
+                     <span>{fiveStarPity}</span>
+                  </div>
+                  <div className="flex gap-x-2">
+                     <span className="font-bold">Avg 4* Pity:</span>
+                     <span>{fourStarPity}</span>
                   </div>
                </div>
-            </div>
-
-            <div className="flex flex-col gap-y-1">
-               {/* <PieChart
-                  data={{
-                     resonators: summary.resonators,
-                     weapons: summary.weapons,
-                  }}
-                  title="Resource Type"
-               /> */}
-               <PieChart
-                  data={{
-                     "3*":
-                        summary.totalPulls -
-                        summary.fiveStarPulls.length -
-                        summary.fourStarPulls.length,
-                     "4*": summary.fourStarPulls.length,
-                     "5*": summary.fiveStarPulls.length,
-                  }}
-                  title="Rarity"
-               />
+               <div className="flex flex-col gap-y-1">
+                  <PieChart
+                     data={{
+                        "3*":
+                           summary.totalPulls -
+                           summary.fiveStars.length -
+                           summary.fourStars.length,
+                        "4*": summary.fourStars.length,
+                        "5*": summary.fiveStars.length,
+                     }}
+                     title="Rarity"
+                  />
+               </div>
             </div>
          </div>
          <FiveStarWarps summary={summary} />
@@ -83,9 +99,9 @@ function FiveStarWarps({ summary }: { summary: Summary }) {
          <div className="relative inline-block text-center align-middle">
             <h2 className="font-bold">5* Warps:</h2>
             <div className="relative m-1 w-full rounded-md border p-2 dark:border-gray-700">
-               {summary.fiveStarPulls.map((roll) => (
-                  <WarpFrame roll={roll} key={roll.roll} />
-               ))}
+               {summary.fiveStars
+                  .map((roll) => <WarpFrame roll={roll} key={roll.roll} />)
+                  .reverse()}
             </div>
          </div>
       </div>
@@ -139,8 +155,8 @@ type Summary = {
    totalPulls: number;
    resonators: number;
    weapons: number;
-   fiveStarPulls: RollData[];
-   fourStarPulls: RollData[];
+   fiveStars: RollData[];
+   fourStars: RollData[];
 };
 
 function getSummary({ gacha, convene }: SerializeFrom<typeof loader>) {
@@ -149,8 +165,8 @@ function getSummary({ gacha, convene }: SerializeFrom<typeof loader>) {
       totalPulls: gacha?.data.length ?? 0,
       resonators: 0,
       weapons: 0,
-      fiveStarPulls: [] as Array<RollData>,
-      fourStarPulls: [] as Array<RollData>,
+      fiveStars: [] as Array<RollData>,
+      fourStars: [] as Array<RollData>,
    };
 
    // use a for loop instead of forEach, work backwards from the last element in gacha.data
@@ -173,7 +189,7 @@ function getSummary({ gacha, convene }: SerializeFrom<typeof loader>) {
 
       switch (roll?.qualityLevel) {
          case 5:
-            summary.fiveStarPulls.push({
+            summary.fiveStars.push({
                roll: i,
                pity: pity5,
                ...roll,
@@ -182,7 +198,7 @@ function getSummary({ gacha, convene }: SerializeFrom<typeof loader>) {
             pity4 = 0;
             break;
          case 4:
-            summary.fourStarPulls.push({
+            summary.fourStars.push({
                roll: i,
                pity: pity4,
                ...roll,
