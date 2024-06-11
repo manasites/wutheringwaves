@@ -68,7 +68,7 @@ export async function loader({
       resonators,
       weapons,
       conveneTypes,
-      convene: conveneTypes.find((c) => c.id === convene),
+      convene: conveneTypes?.find((c) => c.id === convene),
       gacha: { data: [] as RollData[] },
    });
 }
@@ -134,7 +134,9 @@ clientLoader.hydrate = true;
 
 export const HydrateFallback = () => {
    const [searchParams] = useSearchParams();
-   const { conveneTypes } = useLoaderData<typeof loader>();
+   const loaderData = useLoaderData<typeof loader>();
+
+   console.log({ loaderData });
 
    return (
       <div className="mx-auto max-w-[728px] max-laptop:p-3 laptop:pb-20">
@@ -149,7 +151,7 @@ export const HydrateFallback = () => {
                   onChange={(e) => e.currentTarget.form?.submit()}
                   defaultValue={searchParams.get("convene") ?? "1"}
                >
-                  {conveneTypes?.map((convene) => (
+                  {loaderData?.conveneTypes?.map((convene) => (
                      <option key={convene.id} value={convene.id}>
                         {convene.name}
                      </option>
@@ -187,7 +189,7 @@ export default function HomePage() {
                   onChange={(e) => e.currentTarget.form?.submit()}
                   defaultValue={searchParams.get("convene") ?? "1"}
                >
-                  {loaderData.conveneTypes?.map((convene) => (
+                  {loaderData?.conveneTypes?.map((convene) => (
                      <option key={convene.id} value={convene.id}>
                         {convene.name}
                      </option>

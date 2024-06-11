@@ -123,12 +123,17 @@ function WeaponFrame({ roll }: { roll: RollData }) {
                weapon?.rarity?.id,
             )}`}
          >
+            <div className="relative inline-block text-center align-middle">
+               #{roll.roll}
+            </div>
             <ItemFrame entry={weapon} />
             <div className="mx-1 inline-block align-middle">
                {weapon?.rarity?.id}*
             </div>
             <div className="mx-1 inline-block align-middle">{weapon?.name}</div>
-            <div className="mx-1 inline-block align-right">#{roll.pity}</div>
+            <div className="mx-1 inline-block align-right">
+               Pity: {roll.pity}
+            </div>
          </div>
       </Link>
    );

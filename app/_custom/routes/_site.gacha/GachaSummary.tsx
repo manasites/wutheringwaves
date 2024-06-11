@@ -9,16 +9,13 @@ import type { loader, RollData } from "./route";
 export function GachaSummary({ summary }: { summary: GachaSummary }) {
    return (
       <div className="bg-white dark:bg-neutral-900 rounded-lg p-4">
-         <h3 className="text-lg font-bold">Gacha Summary</h3>
+         <FiveStarWarps summary={summary} />
          <div //two columns
             className="columns-2"
          >
             <div className="flex flex-col gap-y-2">
                <div className="flex flex-col gap-y-1">
-                  <div className="flex gap-x-2">
-                     <span className="font-bold">Gacha Name:</span>
-                     <span>{summary?.convene?.name}</span>
-                  </div>
+                  <h2>{summary?.convene?.name}</h2>
                </div>
                <div className="flex flex-col gap-y-1">
                   <div className="flex gap-x-2">
@@ -65,7 +62,6 @@ export function GachaSummary({ summary }: { summary: GachaSummary }) {
                </div>
             </div>
          </div>
-         <FiveStarWarps summary={summary} />
       </div>
    );
 }
