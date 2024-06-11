@@ -20,6 +20,7 @@ import { fetchWithCache } from "~/utils/cache.server";
 
 import { GachaHistory } from "./GachaHistory";
 import { GachaSummary } from "./GachaSummary";
+import { getSummary } from "./getSummary";
 
 export type RollData = {
    roll?: number;
@@ -169,7 +170,10 @@ export const HydrateFallback = () => {
 
 export default function HomePage() {
    const [searchParams] = useSearchParams();
-   const { conveneTypes } = useLoaderData<typeof loader>();
+   const loaderData = useLoaderData<typeof loader>();
+
+   const summary = getSummary(loaderData);
+
    return (
       <div className="mx-auto max-w-[728px] max-laptop:p-3 laptop:pb-20">
          <H2 text="Warp History" />
@@ -183,7 +187,7 @@ export default function HomePage() {
                   onChange={(e) => e.currentTarget.form?.submit()}
                   defaultValue={searchParams.get("convene") ?? "1"}
                >
-                  {conveneTypes?.map((convene) => (
+                  {loaderData.conveneTypes?.map((convene) => (
                      <option key={convene.id} value={convene.id}>
                         {convene.name}
                      </option>
@@ -192,9 +196,9 @@ export default function HomePage() {
                <input type="submit" value="Submit" />
             </Form>
          </div>
-         <GachaSummary />
+         <GachaSummary summary={summary} />
          {/* <GachaGraph /> */}
-         <GachaHistory />
+         <GachaHistory summary={summary} />
       </div>
    );
 }
