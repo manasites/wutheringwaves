@@ -1,14 +1,16 @@
+import type { SerializeFrom } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
 import { Image } from "~/components/Image";
+import type { ConveneType } from "~/db/payload-custom-types";
 
 import { PieChart } from "./Pie";
-import type { loader } from "./route";
+import type { loader, RollData } from "./route";
 
 export function GachaSummary() {
-   const { gacha, banner } = useLoaderData<typeof loader>();
+   const loaderData = useLoaderData<typeof loader>();
 
-   const summary = getSummary();
+   const summary = getSummary(loaderData);
 
    console.log(summary);
 
@@ -22,11 +24,7 @@ export function GachaSummary() {
                <div className="flex flex-col gap-y-1">
                   <div className="flex gap-x-2">
                      <span className="font-bold">Gacha Name:</span>
-                     <span>{banner.name}</span>
-                  </div>
-                  <div className="flex gap-x-2">
-                     <span className="font-bold">Gacha Type:</span>
-                     <span>{banner.type}</span>
+                     <span>{loaderData?.convene?.name}</span>
                   </div>
                </div>
                <div className="flex flex-col gap-y-1">
@@ -80,19 +78,13 @@ export function GachaSummary() {
 }
 
 function FiveStarWarps({ summary }: { summary: Summary }) {
-   const { gacha } = useLoaderData<typeof loader>();
-
    return (
       <div className="flex flex-col gap-y-1">
          <div className="relative inline-block text-center align-middle">
             <h2 className="font-bold">5* Warps:</h2>
             <div className="relative m-1 w-full rounded-md border p-2 dark:border-gray-700">
-               {summary.fiveStarPulls.map((int) => (
-                  <WarpFrame
-                     roll={gacha?.data[int]}
-                     number={gacha?.data.length - int}
-                     key={gacha?.data.length - int}
-                  />
+               {summary.fiveStarPulls.map((roll) => (
+                  <WarpFrame roll={roll} key={roll.roll} />
                ))}
             </div>
          </div>
@@ -100,7 +92,7 @@ function FiveStarWarps({ summary }: { summary: Summary }) {
    );
 }
 
-function WarpFrame({ roll, number }: { roll: RollData; number: number }) {
+function WarpFrame({ roll }: { roll: RollData }) {
    const { weapons, resonators } = useLoaderData<typeof loader>();
 
    let entry: any;
@@ -108,16 +100,16 @@ function WarpFrame({ roll, number }: { roll: RollData; number: number }) {
    switch (roll.resourceType) {
       case "Weapons":
          entry = weapons?.find((w) => w.id == roll.resourceId);
-         return <ItemFrame entry={entry} number={number} />;
+         return <ItemFrame entry={entry} roll={roll} />;
       case "Resonators":
          entry = resonators?.find((w) => w.id == roll.resourceId);
-         return <ItemFrame entry={entry} number={number} />;
+         return <ItemFrame entry={entry} roll={roll} />;
       default:
          return <div>Unknown Resource Type</div>;
    }
 }
 
-function ItemFrame({ entry, number }: any) {
+function ItemFrame({ entry, roll }: any) {
    // mat holds material information
 
    return (
@@ -135,71 +127,76 @@ function ItemFrame({ entry, number }: any) {
                alt={entry?.name}
             />
             <div className="absolute bottom-0 right-0 bg-white/50 text-black p-1 text-xs rounded-md ">
-               #{number}
+               #{roll.pity}
             </div>
          </div>
       </div>
    );
 }
 
-type RollData = {
-   cardPoolType: string;
-   resourceId: number;
-   qualityLevel: number;
-   resourceType: string;
-   name: string;
-   count: number;
-   time: string;
-};
-
 type Summary = {
-   banner: {
-      name: string;
-      type: string;
-   };
+   convene?: ConveneType;
    totalPulls: number;
    resonators: number;
    weapons: number;
-   fiveStarPulls: number[];
-   fourStarPulls: number[];
+   fiveStarPulls: RollData[];
+   fourStarPulls: RollData[];
 };
 
-function getSummary() {
-   const { gacha, banner, weapons, resonators } =
-      useLoaderData<typeof loader>();
-
-   const summary: Summary = {
-      banner,
+function getSummary({ gacha, convene }: SerializeFrom<typeof loader>) {
+   const summary = {
+      convene,
       totalPulls: gacha?.data.length ?? 0,
       resonators: 0,
       weapons: 0,
-      fiveStarPulls: [],
-      fourStarPulls: [],
+      fiveStarPulls: [] as Array<RollData>,
+      fourStarPulls: [] as Array<RollData>,
    };
 
-   gacha?.data.forEach((roll, int) => {
-      switch (roll.resourceType) {
+   // use a for loop instead of forEach, work backwards from the last element in gacha.data
+   let pity4 = 0; // 4* pity counter
+   let pity5 = 0; // 5* pity counter
+
+   for (let i = 1; i <= gacha.data.length; i++) {
+      const roll = gacha.data[gacha.data.length - i];
+      switch (roll?.resourceType) {
          case "Resonators":
             summary.resonators++;
-            let resonator = resonators?.find((w) => w.id == roll.resourceId);
-
-            if (resonator?.rarity?.id === "5") summary.fiveStarPulls.push(int);
-            if (resonator?.rarity?.id === "4") summary.fourStarPulls.push(int);
             break;
          case "Weapons":
             summary.weapons++;
-
-            let weapon = weapons?.find((w) => w.id == roll.resourceId);
-
-            if (weapon?.rarity?.id === "5") summary.fiveStarPulls.push(int);
-            if (weapon?.rarity?.id === "4") summary.fourStarPulls.push(int);
-
             break;
          default:
-            console.log("Unknown Resource Type: ", JSON.stringify(roll));
+            console.log(i, "Unknown Resource Type: ", roll);
             break;
       }
-   });
+
+      switch (roll?.qualityLevel) {
+         case 5:
+            summary.fiveStarPulls.push({
+               roll: i,
+               pity: pity5,
+               ...roll,
+            });
+            pity5 = 0;
+            pity4 = 0;
+            break;
+         case 4:
+            summary.fourStarPulls.push({
+               roll: i,
+               pity: pity4,
+               ...roll,
+            });
+            pity4 = 0;
+            break;
+         default:
+            pity5++;
+            pity4++;
+            break;
+      }
+   }
+
+   console.log({ summary });
 
    return summary;
 }

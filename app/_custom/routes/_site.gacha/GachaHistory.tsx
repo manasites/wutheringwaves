@@ -2,7 +2,7 @@ import { Link, useLoaderData } from "@remix-run/react";
 
 import { Image } from "~/components/Image";
 
-import type { loader } from "./route";
+import type { loader, RollData } from "./route";
 
 export function GachaHistory() {
    const { gacha } = useLoaderData<typeof loader>();
@@ -28,16 +28,6 @@ export function GachaHistory() {
       </div>
    );
 }
-
-type RollData = {
-   cardPoolType: string;
-   resourceId: number;
-   qualityLevel: number;
-   resourceType: string;
-   name: string;
-   count: number;
-   time: string;
-};
 
 function ResultFrame({ roll, number }: { roll: RollData; number: number }) {
    switch (roll.resourceType) {
