@@ -23,8 +23,8 @@ let total = 0, resonators = 0, weapons = 0, fiveStars: RollData[] = [], fourStar
 
  
     // use a for loop instead of forEach, work backwards from the last element in gacha.data
-    let pity4 = 0; // 4* pity counter
-    let pity5 = 0; // 5* pity counter
+    let pity4 = 1; // 4* pity counter
+    let pity5 = 1; // 5* pity counter
  
     for (let i = 1; i <= gacha.data.length; i++) {
        const roll = gacha.data[gacha.data.length - i];
@@ -49,15 +49,15 @@ let total = 0, resonators = 0, weapons = 0, fiveStars: RollData[] = [], fourStar
                 pity: pity5,
                 ...roll,
              });
-             pity5 = 0;
-             pity4 = 0;
+             pity5 = 1;
+             pity4 = 1;
              break;
           case 4:
              fourStars.push({
                 pity: pity4,
                 ...roll,
              });
-             pity4 = 0;
+             pity4 = 1;
              break;
           default:
              pity5++;

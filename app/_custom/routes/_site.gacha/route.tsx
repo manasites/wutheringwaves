@@ -135,8 +135,6 @@ export const HydrateFallback = () => {
    const [searchParams] = useSearchParams();
    const loaderData = useLoaderData<typeof loader>();
 
-   console.log({ loaderData });
-
    return (
       <div className="mx-auto max-w-[728px] max-laptop:p-3 laptop:pb-20">
          <H2 text="Warp History" />
@@ -174,6 +172,8 @@ export default function HomePage() {
    const loaderData = useLoaderData<typeof loader>();
 
    const summary = getSummary(loaderData);
+
+   console.log(loaderData.gacha);
 
    return (
       <div className="mx-auto max-w-[728px] max-laptop:p-3 laptop:pb-20">

@@ -120,7 +120,7 @@ function WeaponFrame({ roll }: { roll: RollData }) {
          >
             {entry && <ItemFrame entry={entry} />}
             <div className="mx-1 align-middle">{roll.qualityLevel}*</div>
-            <div className="mx-1 align-middle w-full">{roll.name}</div>
+            <div className="mx-1 align-center w-full">{roll.name}</div>
             <div className="mx-1 align-right">{roll.time}</div>
             <div className="mx-1 align-right">
                <div className="text-xs opacity-60 right-0">Pity</div>
