@@ -24,12 +24,10 @@ export function GachaHistory({ summary }: { summary: GachaSummary }) {
 
    const gacha = getGacha({ summary, toggles });
 
-   console.log({ gacha });
-
    return (
       <div className="bg-white dark:bg-neutral-900 rounded-lg p-4">
          <h3 className="text-lg font-bold">Gacha History</h3>
-         <div className="flex gap-x-2">
+         <div className="grid grid-cols-4 gap-x-2">
             <label>
                <input
                   type="checkbox"
@@ -71,9 +69,7 @@ export function GachaHistory({ summary }: { summary: GachaSummary }) {
                Weapons
             </label>
          </div>
-         {gacha?.map((roll, int) => (
-            <ResultFrame roll={roll} key={roll.roll} />
-         ))}
+         {gacha?.map((roll, int) => <ResultFrame roll={roll} key={int} />)}
       </div>
    );
 }
@@ -94,10 +90,8 @@ function getGacha({
    if (!toggles.weapons)
       gacha = gacha.filter((r) => r.resourceType !== "Weapons");
 
-   // sort gacha by roll number, most recent first
-   gacha.sort((a, b) =>
-      a.roll !== undefined && b.roll !== undefined ? b.roll - a.roll : 0,
-   );
+   // sort gacha by date, most recent first
+   gacha.sort((a, b) => (a.time > b.time ? -1 : a.time < b.time ? 1 : 0));
    return gacha;
 }
 
@@ -115,23 +109,23 @@ function ResultFrame({ roll }: { roll: RollData }) {
 function WeaponFrame({ roll }: { roll: RollData }) {
    const { weapons } = useLoaderData<typeof loader>();
 
-   const weapon = weapons?.find((w) => w.id == roll.resourceId);
+   const entry = weapons?.find((w) => w.id == roll.resourceId);
+
    return (
-      <Link to={`/c/weapons/${weapon?.slug}`}>
+      <Link to={`/c/weapons/${entry?.slug ?? entry?.id ?? ""}`}>
          <div
-            className={`relative m-1 w-full rounded-md border p-2 dark:border-gray-700 ${customColor(
-               weapon?.rarity?.id,
+            className={` m-1 w-full flex rounded-md border p-2 dark:border-gray-700 ${customColor(
+               roll.qualityLevel,
             )}`}
          >
-            <div className="relative inline-block text-center align-middle">
-               #{roll.roll}
+            {entry && <ItemFrame entry={entry} />}
+            <div className="mx-1 align-middle">{roll.qualityLevel}*</div>
+            <div className="mx-1 align-middle w-full">{roll.name}</div>
+            <div className="mx-1 align-right">{roll.time}</div>
+            <div className="mx-1 align-right">
+               <div className="text-xs opacity-60 right-0">Pity</div>
+               {roll.pity}
             </div>
-            <ItemFrame entry={weapon} />
-            <div className="mx-1 inline-block align-middle">
-               {weapon?.rarity?.id}*
-            </div>
-            <div className="mx-1 inline-block align-middle">{weapon?.name}</div>
-            <div className="mx-1 inline-block align-right">${roll.pity}</div>
          </div>
       </Link>
    );
@@ -139,35 +133,32 @@ function WeaponFrame({ roll }: { roll: RollData }) {
 
 function ResonatorFrame({ roll }: { roll: RollData }) {
    const { resonators } = useLoaderData<typeof loader>();
-   const resonator = resonators?.find((r) => r.id == roll.resourceId);
+   const entry = resonators?.find((r) => r.id == roll.resourceId);
    return (
-      <Link to={`/c/resonators/${resonator?.slug}`}>
+      <Link to={`/c/resonators/${entry?.slug ?? entry?.id ?? ""}`}>
          <div
-            className={`flex m-1 w-full rounded-md border p-2 dark:border-gray-700 ${customColor(
-               resonator?.rarity?.id,
+            className={` m-1 w-full flex rounded-md align-middle border p-2 dark:border-gray-700 ${customColor(
+               roll.qualityLevel,
             )}`}
          >
-            <div className="relative inline-block text-center align-middle">
-               #{roll.roll}
+            {entry && <ItemFrame entry={entry} />}
+            <div className="mx-1 align-middle">{roll.qualityLevel}*</div>
+            <div className="mx-1 align-middle w-full">{roll.name}</div>
+            <div className="mx-1 align-right">{roll.time}</div>
+            <div className="mx-1 align-right">
+               <div className="text-xs opacity-60 right-0">Pity</div>
+               {roll.pity}
             </div>
-            <ItemFrame entry={resonator} />
-            <div className="mx-1 inline-block align-middle">
-               {resonator?.rarity?.id}*
-            </div>
-            <div className="mx-1 inline-block align-middle">
-               {resonator?.name}
-            </div>
-            <div className="mx-1 inline-block align-right">${roll.pity}</div>
          </div>
       </Link>
    );
 }
 
-function customColor(rarity?: string) {
+function customColor(rarity?: number) {
    switch (rarity) {
-      case "5":
+      case 5:
          return "bg-orange-500 bg-opacity-10 font-bold";
-      case "4":
+      case 4:
          return "bg-purple-500 bg-opacity-10 font-bold";
       default:
          return "";

@@ -73,7 +73,7 @@ function FiveStarWarps({ summary }: { summary: GachaSummary }) {
             <h2 className="font-bold">5* Warps:</h2>
             <div className="relative m-1 w-full rounded-md border p-2 dark:border-gray-700">
                {summary.fiveStars
-                  .map((roll) => <WarpFrame roll={roll} key={roll.roll} />)
+                  .map((roll, int) => <WarpFrame roll={roll} key={int} />)
                   .reverse()}
             </div>
          </div>
@@ -108,7 +108,6 @@ function WarpFrame({ roll }: { roll: RollData }) {
 
 function ItemFrame({ entry, roll }: any) {
    // mat holds material information
-
    return (
       <div
          className="relative inline-block text-center align-middle"

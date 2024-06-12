@@ -23,7 +23,6 @@ import { GachaSummary } from "./GachaSummary";
 import { getSummary } from "./getSummary";
 
 export type RollData = {
-   roll?: number;
    pity?: number;
    cardPoolType: string;
    resourceId: string;
@@ -35,7 +34,7 @@ export type RollData = {
 };
 
 export async function loader({
-   context: { payload },
+   context: { payload, user },
    params,
    request,
 }: LoaderFunctionArgs) {

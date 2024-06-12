@@ -46,7 +46,6 @@ let total = 0, resonators = 0, weapons = 0, fiveStars: RollData[] = [], fourStar
        switch (roll?.qualityLevel) {
           case 5:
              fiveStars.push({
-                roll: i,
                 pity: pity5,
                 ...roll,
              });
@@ -55,7 +54,6 @@ let total = 0, resonators = 0, weapons = 0, fiveStars: RollData[] = [], fourStar
              break;
           case 4:
              fourStars.push({
-                roll: i,
                 pity: pity4,
                 ...roll,
              });
