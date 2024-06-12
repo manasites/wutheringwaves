@@ -1,4 +1,4 @@
-import { useLoaderData } from "@remix-run/react";
+import { Link, useLoaderData } from "@remix-run/react";
 
 import { Image } from "~/components/Image";
 
@@ -43,7 +43,7 @@ export function GachaSummary({ summary }: { summary: GachaSummary }) {
                      <span>{summary.fiveStarPity}</span>
                   </div>
                   <div className="flex gap-x-2">
-                     <span className="font-bold">Avg 4* Pity:</span>
+                     s<span className="font-bold">Avg 4* Pity:</span>
                      <span>{summary.fourStarPity}</span>
                   </div>
                </div>
@@ -89,10 +89,18 @@ function WarpFrame({ roll }: { roll: RollData }) {
    switch (roll.resourceType) {
       case "Weapons":
          entry = weapons?.find((w) => w.id == roll.resourceId);
-         return <ItemFrame entry={entry} roll={roll} />;
+         return (
+            <Link to={`/c/weapons/${entry?.slug}`}>
+               <ItemFrame entry={entry} roll={roll} />
+            </Link>
+         );
       case "Resonators":
          entry = resonators?.find((w) => w.id == roll.resourceId);
-         return <ItemFrame entry={entry} roll={roll} />;
+         return (
+            <Link to={`/c/resonators/${entry?.slug}`}>
+               <ItemFrame entry={entry} roll={roll} />
+            </Link>
+         );
       default:
          return <div>Unknown Resource Type</div>;
    }
@@ -115,8 +123,8 @@ function ItemFrame({ entry, roll }: any) {
                } material-frame`}
                alt={entry?.name}
             />
-            <div className="absolute bottom-0 right-0 bg-white/50 text-black p-1 text-xs rounded-md ">
-               #{roll.pity}
+            <div className="absolute top-0 right-0 bg-white/50 text-black p-1 text-xs rounded-md ">
+               {roll.pity}
             </div>
          </div>
       </div>

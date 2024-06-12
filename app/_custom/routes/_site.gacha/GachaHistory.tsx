@@ -131,9 +131,7 @@ function WeaponFrame({ roll }: { roll: RollData }) {
                {weapon?.rarity?.id}*
             </div>
             <div className="mx-1 inline-block align-middle">{weapon?.name}</div>
-            <div className="mx-1 inline-block align-right">
-               Pity: {roll.pity}
-            </div>
+            <div className="mx-1 inline-block align-right">${roll.pity}</div>
          </div>
       </Link>
    );
@@ -149,6 +147,9 @@ function ResonatorFrame({ roll }: { roll: RollData }) {
                resonator?.rarity?.id,
             )}`}
          >
+            <div className="relative inline-block text-center align-middle">
+               #{roll.roll}
+            </div>
             <ItemFrame entry={resonator} />
             <div className="mx-1 inline-block align-middle">
                {resonator?.rarity?.id}*
@@ -156,7 +157,7 @@ function ResonatorFrame({ roll }: { roll: RollData }) {
             <div className="mx-1 inline-block align-middle">
                {resonator?.name}
             </div>
-            <div className="mx-1 inline-block align-right">#{roll.pity}</div>
+            <div className="mx-1 inline-block align-right">${roll.pity}</div>
          </div>
       </Link>
    );
