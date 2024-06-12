@@ -43,7 +43,7 @@ export function GachaSummary({ summary }: { summary: GachaSummary }) {
                      <span>{summary.fiveStarPity}</span>
                   </div>
                   <div className="flex gap-x-2">
-                     s<span className="font-bold">Avg 4* Pity:</span>
+                     <span className="font-bold">Avg 4* Pity:</span>
                      <span>{summary.fourStarPity}</span>
                   </div>
                </div>
