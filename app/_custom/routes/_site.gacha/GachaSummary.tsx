@@ -19,8 +19,12 @@ export function GachaSummary({ summary }: { summary: GachaSummary }) {
                </div>
                <div className="flex flex-col gap-y-1">
                   <div className="flex gap-x-2">
-                     <span className="font-bold">Total Pulls:</span>
+                     <span className="font-bold">Total Convenes:</span>
                      <span>{summary.total}</span>
+                  </div>
+                  <div className="flex gap-x-2">
+                     <span className="font-bold">Cost:</span>
+                     <span>{summary.total * 160}</span>
                   </div>
                   <div className="flex gap-x-2">
                      <span className="font-bold">Resonators:</span>
@@ -70,7 +74,7 @@ function FiveStarWarps({ summary }: { summary: GachaSummary }) {
    return (
       <div className="flex flex-col gap-y-1">
          <div className="relative inline-block text-center align-middle">
-            <h2 className="font-bold">5* Warps:</h2>
+            <h2 className="font-bold">5* Convenes:</h2>
             <div className="relative m-1 w-full rounded-md border p-2 dark:border-gray-700">
                {summary.fiveStars
                   .map((roll, int) => <WarpFrame roll={roll} key={int} />)
