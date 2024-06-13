@@ -3,11 +3,21 @@ import { Link, useLoaderData } from "@remix-run/react";
 import { H2 } from "~/components/Headers";
 import { Image } from "~/components/Image";
 
-import { type GachaSummary } from "./getSummary";
+import { type GachaSummaryType } from "./getSummary";
 import { PieChart } from "./Pie";
 import type { loader, RollData } from "./route";
 
-export function GachaSummary({ summary }: { summary: GachaSummary }) {
+export function GachaSummary({ summary }: { summary: GachaSummaryType }) {
+   // display five star percentage in shape of #.##%
+   const fiveStarPercentage = (
+      (summary.fiveStars.length / summary.total) *
+      100
+   ).toFixed(2);
+   const fourStarPercentage = (
+      (summary.fourStars.length / summary.total) *
+      100
+   ).toFixed(2);
+
    return (
       <div className="bg-white dark:bg-neutral-900 rounded-lg p-4">
          <div className="flex flex-col gap-y-1">
@@ -31,11 +41,11 @@ export function GachaSummary({ summary }: { summary: GachaSummary }) {
             </div>
             <div className="flex flex-col gap-y-1">
                <div className="flex gap-x-2">
-                  <span className="font-bold">Total Convenes:</span>
+                  <span className="font-bold">Convenes Total:</span>
                   <span>{summary.total}</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">Cost:</span>
+                  <span className="font-bold">Worth:</span>
                   <span>{summary.total * 160}</span>
                </div>
                <div className="flex gap-x-2">
@@ -47,19 +57,21 @@ export function GachaSummary({ summary }: { summary: GachaSummary }) {
                   <span>{summary.weapons}</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">5* Convenes:</span>
+                  <span className="font-bold">5★ Convenes:</span>
                   <span>{summary.fiveStars.length}</span>
+                  <span>({fiveStarPercentage}%)</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">4* Convenes:</span>
+                  <span className="font-bold">4★ Convenes:</span>
                   <span>{summary.fourStars.length}</span>
+                  <span>({fourStarPercentage}%)</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">Avg 5* Pity:</span>
+                  <span className="font-bold">5★ Median:</span>
                   <span>{summary.fiveStarPity}</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">Avg 4* Pity:</span>
+                  <span className="font-bold">4★ Median:</span>
                   <span>{summary.fourStarPity}</span>
                </div>
             </div>
@@ -69,10 +81,10 @@ export function GachaSummary({ summary }: { summary: GachaSummary }) {
    );
 }
 
-function FiveStarWarps({ summary }: { summary: GachaSummary }) {
+function FiveStarWarps({ summary }: { summary: GachaSummaryType }) {
    return (
       <div className="flex flex-col gap-y-1">
-         <H2 text="5* Convenes" />
+         <H2 text="5★ Convenes" />
          <div className="relative inline-block text-center align-middle">
             <div className="relative m-1 w-full rounded-md border p-2 dark:border-gray-700">
                {summary.fiveStars

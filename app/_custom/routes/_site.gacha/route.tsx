@@ -1,13 +1,14 @@
 // Track Achievements using Local Storage on this page!
 // Note all achievements and subcategories / total roll currency rewards will be included if possible.
 
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
    type ClientLoaderFunctionArgs,
    Form,
    useLoaderData,
    useSearchParams,
+   useSubmit,
 } from "@remix-run/react";
 
 import type {
@@ -18,9 +19,15 @@ import type {
 import { H2 } from "~/components/Headers";
 import { fetchWithCache } from "~/utils/cache.server";
 
+import {
+   addGlobalSummary,
+   type GlobalSummaryType,
+   subGlobalSummary,
+   toGlobal,
+} from "./addToGlobal";
 import { GachaHistory } from "./GachaHistory";
 import { GachaSummary } from "./GachaSummary";
-import { getSummary } from "./getSummary";
+import { type GachaSummaryType, getSummary } from "./getSummary";
 
 export type RollData = {
    pity?: number;
@@ -115,6 +122,8 @@ async function getData({
          searchParams.get("recordId") || "cb1d1f2269e5442124eff6540823a570",
    };
 
+   localStorage.setItem("base_payload", JSON.stringify(base_payload));
+
    const response = await fetch(
       "https://gmserver-api.aki-game2.net/gacha/record/query",
       {
@@ -138,7 +147,7 @@ export const HydrateFallback = () => {
    return (
       <div className="mx-auto max-w-[728px] max-laptop:p-3 laptop:pb-20">
          <H2 text="Warp History" />
-         <div className="justify-left flex items-center gap-x-1">
+         <div className="justify-left flex items-center gap-x-1 ">
             <Form method="GET">
                <label htmlFor="url">Import URL</label>
                <input name="url" placeholder="" type="url" className="w-full" />
@@ -170,10 +179,20 @@ export const HydrateFallback = () => {
 export default function HomePage() {
    const [searchParams] = useSearchParams();
    const loaderData = useLoaderData<typeof loader>();
+   const submit = useSubmit();
 
    const summary = getSummary(loaderData);
 
-   console.log(loaderData.gacha);
+   function saveSummary() {
+      const base_payload = JSON.parse(
+         localStorage.getItem("base_payload") || "{}",
+      );
+
+      submit(
+         { base_payload, summary },
+         { method: "POST", navigate: false, encType: "application/json" },
+      );
+   }
 
    return (
       <div className="mx-auto max-w-[728px] max-laptop:p-3 laptop:pb-20">
@@ -197,9 +216,118 @@ export default function HomePage() {
                <input type="submit" value="Submit" />
             </Form>
          </div>
+         <input
+            type="button"
+            value="Submit Summary to global"
+            onClick={saveSummary}
+         />
          <GachaSummary summary={summary} />
          {/* <GachaGraph /> */}
          <GachaHistory summary={summary} />
       </div>
    );
 }
+
+// todo: currently we're skipping access controls
+export async function action({
+   request,
+   context: { user, payload },
+}: ActionFunctionArgs) {
+   const { base_payload, summary } = JSON.parse(await request.text()) as {
+      base_payload: any;
+      summary: GachaSummaryType;
+   };
+
+   console.log({ base_payload, summary });
+
+   const id = "wuwa-" + base_payload?.playerId + "-" + summary.convene?.id;
+
+   const globalId = "wuwa-convene-" + summary.convene?.id;
+
+   const oldPlayerSummary = (
+      await payload.findByID({
+         collection: "user-data",
+         id,
+         overrideAccess: true,
+      })
+   )?.data as GachaSummaryType;
+
+   const oldGlobalSummary = (
+      await payload.findByID({
+         collection: "user-data",
+         id: globalId,
+         overrideAccess: true,
+      })
+   )?.data as GlobalSummaryType;
+
+   // First we compare the old and new player record
+   const addToGlobal = subGlobalSummary(
+      toGlobal(summary),
+      toGlobal(oldPlayerSummary),
+   );
+
+   // Then we calculate the new global summary
+   const newGlobalSummary = oldGlobalSummary
+      ? addGlobalSummary(oldGlobalSummary, addToGlobal)
+      : addToGlobal;
+
+   // First we'll update the user record with the new summary
+   try {
+      if (oldPlayerSummary) {
+         // try to update the record
+         await payload.update({
+            collection: "user-data",
+            id,
+            data: {
+               data: summary,
+               // @ts-expect-error this is fine
+               site: "pogseal-imbhew2r8tg7",
+            },
+         });
+      } else {
+         console.log("no result, inserting new record");
+
+         await payload.create({
+            collection: "user-data",
+            data: {
+               data: summary,
+               // @ts-expect-error this is fine
+               site: "pogseal-imbhew2r8tg7",
+               id,
+            },
+         });
+      }
+
+      // Then we'll update the global record
+      if (oldGlobalSummary) {
+         // try to update the record
+         await payload.update({
+            collection: "user-data",
+            id: globalId,
+            data: {
+               data: newGlobalSummary,
+               // @ts-expect-error this is fine
+               site: "pogseal-imbhew2r8tg7",
+            },
+         });
+      } else {
+         // insert new record
+         await payload.create({
+            collection: "user-data",
+            data: {
+               data: newGlobalSummary,
+               // @ts-expect-error this is fine
+               site: "pogseal-imbhew2r8tg7",
+               id: globalId,
+            },
+         });
+      }
+   } catch (e) {
+      console.error("Error updating userData ", id, e);
+   }
+
+   return json({ success: true, addToGlobal, newGlobalSummary });
+}
+
+// we don't want this to revalidate
+export const shouldRevalidate = () => false;

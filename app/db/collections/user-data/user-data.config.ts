@@ -23,7 +23,7 @@ export const UserData: CollectionConfig = {
          name: "author",
          type: "relationship",
          relationTo: "users",
-         maxDepth: 2,
+         maxDepth: 1,
          required: true,
          defaultValue: ({ user }: { user: User }) => user?.id,
          access: {
@@ -37,6 +37,10 @@ export const UserData: CollectionConfig = {
          hasMany: false,
          required: true,
          maxDepth: 1,
+      },
+      {
+         name: "id",
+         type: "text",
       },
       {
          name: "data",

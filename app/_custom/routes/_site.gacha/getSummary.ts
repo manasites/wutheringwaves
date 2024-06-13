@@ -1,12 +1,12 @@
 import type { SerializeFrom } from "@remix-run/node";
 
-import type { ConveneType } from "~/db/payload-custom-types";
+import type { ConveneType } from "payload/generated-custom-types";
 
 import type { loader, RollData } from "./route";
 
 
 
-export type GachaSummary = {
+export type GachaSummaryType = {
     convene?: ConveneType;
     total: number;
     resonators: number;
@@ -92,6 +92,6 @@ let total = 0, resonators = 0, weapons = 0, fiveStars: RollData[] = [], fourStar
          fourStars,
          fiveStarPity,
          fourStarPity,         
-    } satisfies GachaSummary;
+    } satisfies GachaSummaryType;
  }
  
