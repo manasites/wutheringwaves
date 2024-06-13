@@ -244,35 +244,41 @@ export async function action({
 
    const globalId = "wuwa-convene-" + summary.convene?.id;
 
-   const oldPlayerSummary = (
-      await payload.findByID({
-         collection: "user-data",
-         id,
-         overrideAccess: true,
-      })
-   )?.data as GachaSummaryType;
+   let oldPlayerSummary: GachaSummaryType | undefined = undefined,
+      oldGlobalSummary: GlobalSummaryType | undefined = undefined;
 
-   const oldGlobalSummary = (
-      await payload.findByID({
-         collection: "user-data",
-         id: globalId,
-         overrideAccess: true,
-      })
-   )?.data as GlobalSummaryType;
+   try {
+      oldPlayerSummary = (
+         await payload.findByID({
+            collection: "user-data",
+            id,
+            overrideAccess: true,
+         })
+      )?.data as GachaSummaryType;
+
+      oldGlobalSummary = (
+         await payload.findByID({
+            collection: "user-data",
+            id: globalId,
+            overrideAccess: true,
+         })
+      )?.data as GlobalSummaryType;
+   } catch (e) {
+      console.error(e);
+   }
 
    // First we compare the old and new player record
-   const addToGlobal = subGlobalSummary(
-      toGlobal(summary),
-      toGlobal(oldPlayerSummary),
-   );
+   const addToGlobal = oldPlayerSummary
+      ? subGlobalSummary(toGlobal(summary), toGlobal(oldPlayerSummary))
+      : toGlobal(summary);
 
    // Then we calculate the new global summary
    const newGlobalSummary = oldGlobalSummary
       ? addGlobalSummary(oldGlobalSummary, addToGlobal)
       : addToGlobal;
 
-   // First we'll update the user record with the new summary
    try {
+      // First we'll update the user record with the new summary
       if (oldPlayerSummary) {
          // try to update the record
          await payload.update({
@@ -326,7 +332,12 @@ export async function action({
       console.error("Error updating userData ", id, e);
    }
 
-   return json({ success: true, addToGlobal, newGlobalSummary });
+   return json({
+      success: true,
+      oldGlobalSummary,
+      newGlobalSummary,
+      addToGlobal,
+   });
 }
 
 // we don't want this to revalidate

@@ -24,7 +24,6 @@ export const UserData: CollectionConfig = {
          type: "relationship",
          relationTo: "users",
          maxDepth: 1,
-         required: true,
          defaultValue: ({ user }: { user: User }) => user?.id,
          access: {
             update: isStaffFieldLevel,
