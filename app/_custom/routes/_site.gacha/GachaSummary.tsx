@@ -4,7 +4,8 @@ import { H2 } from "~/components/Headers";
 import { Image } from "~/components/Image";
 
 import { type GachaSummaryType } from "./getSummary";
-import { PieChart } from "./Pie";
+import { DatesChart } from "./DatesChart";
+import { PieChart } from "./PieChart";
 import type { loader, RollData } from "./route";
 
 export function GachaSummary({ summary }: { summary: GachaSummaryType }) {
@@ -26,19 +27,6 @@ export function GachaSummary({ summary }: { summary: GachaSummaryType }) {
          <div //two columns
             className="columns-2"
          >
-            <div className="flex flex-col gap-y-1">
-               <PieChart
-                  data={{
-                     "3*":
-                        summary.total -
-                        summary.fiveStars.length -
-                        summary.fourStars.length,
-                     "4*": summary.fourStars.length,
-                     "5*": summary.fiveStars.length,
-                  }}
-                  title="Rarity"
-               />
-            </div>
             <div className="flex flex-col gap-y-1">
                <div className="flex gap-x-2">
                   <span className="font-bold">Convenes Total:</span>
@@ -76,7 +64,9 @@ export function GachaSummary({ summary }: { summary: GachaSummaryType }) {
                </div>
             </div>
          </div>
+
          <FiveStarWarps summary={summary} />
+         <DatesChart dates={summary.dates} />
       </div>
    );
 }

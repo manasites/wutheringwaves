@@ -6,6 +6,7 @@ import { Image } from "~/components/Image";
 
 import type { GlobalSummaryType } from "./addToGlobal";
 import type { loader, RollData } from "./route";
+import { Histogram } from "./Histogram";
 
 export function GachaGlobal({
    summary,
@@ -21,7 +22,6 @@ export function GachaGlobal({
          <div //two columns
             className="columns-2"
          >
-            <div className="flex flex-col gap-y-1"></div>
             <div className="flex flex-col gap-y-1">
                <div className="flex gap-x-2">
                   <span className="font-bold">Convenes Total:</span>
@@ -45,8 +45,18 @@ export function GachaGlobal({
                </div>
             </div>
          </div>
+         <PityGraph pities={summary.pities} />
       </div>
    );
+}
+
+// Present pity as a Histogram
+function PityGraph({ pities }: { pities: number[] }) {
+   const labels = pities.map((_, i) => i);
+   const data = pities;
+   const color = "rgba(0, 0, 255, 0.5)";
+   const title = "Pity Histogram";
+   return <Histogram x={labels} y={data} color={color} title={title} />;
 }
 
 function WarpFrame({ roll }: { roll: RollData }) {
