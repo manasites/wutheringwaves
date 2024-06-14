@@ -3,9 +3,8 @@ import { Link, useLoaderData } from "@remix-run/react";
 import { H2 } from "~/components/Headers";
 import { Image } from "~/components/Image";
 
-import { type GachaSummaryType } from "./getSummary";
 import { DatesChart } from "./DatesChart";
-import { PieChart } from "./PieChart";
+import { type GachaSummaryType } from "./getSummary";
 import type { loader, RollData } from "./route";
 
 export function GachaSummary({ summary }: { summary: GachaSummaryType }) {
@@ -64,14 +63,13 @@ export function GachaSummary({ summary }: { summary: GachaSummaryType }) {
                </div>
             </div>
          </div>
-
-         <FiveStarWarps summary={summary} />
          <DatesChart dates={summary.dates} />
+         <FiveStars summary={summary} />
       </div>
    );
 }
 
-function FiveStarWarps({ summary }: { summary: GachaSummaryType }) {
+function FiveStars({ summary }: { summary: GachaSummaryType }) {
    return (
       <div className="flex flex-col gap-y-1">
          <H2 text="5★ Convenes" />

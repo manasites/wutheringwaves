@@ -76,20 +76,12 @@ export function getSummary({ gacha, convene }: SerializeFrom<typeof loader>) {
    }
 
    // set average pity rate as fiveStarPity, which is average of roll.pity in summary.fiveStars
-   const fiveStarPity = Math.floor(
-      fiveStars.reduce(
-         (acc: number, curr: RollData) => acc + (curr.pity ?? 80),
-         0,
-      ) / fiveStars.length || 80,
-   );
+   const fiveStarPity =
+      Math.floor(average(fiveStars.map((roll) => roll.pity!))) || 10;
 
    // set average pity rate as fourStarPity, which is average of roll.pity in summary.fourStars
-   const fourStarPity = Math.floor(
-      fourStars.reduce(
-         (acc: number, curr: RollData) => acc + (curr.pity ?? 10),
-         0,
-      ) / fourStars.length || 10,
-   );
+   const fourStarPity =
+      Math.floor(average(fourStars.map((roll) => roll.pity!))) || 10;
 
    return {
       convene,
@@ -102,4 +94,8 @@ export function getSummary({ gacha, convene }: SerializeFrom<typeof loader>) {
       fourStarPity,
       dates,
    } satisfies GachaSummaryType;
+}
+
+export function average(arr: Array<number>) {
+   return arr.reduce((acc, curr) => acc + curr ?? 0, 0) / arr.length;
 }
