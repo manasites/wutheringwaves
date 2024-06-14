@@ -25,6 +25,7 @@ import {
    subGlobalSummary,
    toGlobal,
 } from "./addToGlobal";
+import { GachaGlobal } from "./GachaGlobal";
 import { GachaHistory } from "./GachaHistory";
 import { GachaSummary } from "./GachaSummary";
 import { type GachaSummaryType, getSummary } from "./getSummary";
@@ -67,14 +68,32 @@ export async function loader({
 
    const convene = searchParams.get("convene") || "1";
 
-   // we'll load player Data from the client
-   // const gacha = await getData({ cardPoolId, url: searchParams.get("url") });
+   // we'll avoid access control for global summary
+   async function fetchSummary<T>(id: string) {
+      try {
+         return (
+            await payload.findByID({
+               collection: "user-data",
+               id,
+               overrideAccess: true,
+            })
+         ).data as T;
+      } catch (e) {
+         console.error(e);
+         return null;
+      }
+   }
+
+   const globalSummary = await fetchSummary<GlobalSummaryType>(
+      "wuwa-convene-" + convene,
+   );
 
    return json({
       resonators,
       weapons,
       conveneTypes,
       convene: conveneTypes?.find((c) => c.id === convene),
+      globalSummary,
       gacha: { data: [] as RollData[] },
    });
 }
@@ -221,8 +240,8 @@ export default function HomePage() {
             value="Submit Summary to global"
             onClick={saveSummary}
          />
+         <GachaGlobal summary={loaderData.globalSummary} />
          <GachaSummary summary={summary} />
-         {/* <GachaGraph /> */}
          <GachaHistory summary={summary} />
       </div>
    );

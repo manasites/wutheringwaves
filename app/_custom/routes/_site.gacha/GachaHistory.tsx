@@ -5,7 +5,7 @@ import { Link, useLoaderData } from "@remix-run/react";
 import { H2 } from "~/components/Headers";
 import { Image } from "~/components/Image";
 
-import type { GachaSummary } from "./getSummary";
+import type { GachaSummaryType } from "./getSummary";
 import type { loader, RollData } from "./route";
 
 type GachaToggles = {
@@ -15,7 +15,7 @@ type GachaToggles = {
    resonators: boolean;
 };
 
-export function GachaHistory({ summary }: { summary: GachaSummary }) {
+export function GachaHistory({ summary }: { summary: GachaSummaryType }) {
    const [toggles, setToggles] = useState<GachaToggles>({
       fourStar: true,
       fiveStar: true,
@@ -80,7 +80,7 @@ function getGacha({
    summary,
    toggles,
 }: {
-   summary: GachaSummary;
+   summary: GachaSummaryType;
    toggles: GachaToggles;
 }) {
    let gacha: RollData[] = [];

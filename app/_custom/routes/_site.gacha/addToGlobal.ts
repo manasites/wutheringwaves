@@ -5,6 +5,7 @@ import type { GachaSummaryType } from "./getSummary";
 export type GlobalSummaryType = {
     convene?: ConveneType;
     total: number;
+    players: number,
     resonators: number;
     weapons: number;
     pities: Array<number>;
@@ -16,6 +17,7 @@ export type GlobalSummaryType = {
     let
         convene = summary.convene,
         total = summary.total,
+        players = 1,
         resonators = summary.resonators,
         weapons = summary.weapons,
         pities = Array.from({length: 81}, () => 0),
@@ -41,7 +43,7 @@ export type GlobalSummaryType = {
         }
 
 
-    return { convene, total, resonators, weapons, pities, fiveStars } satisfies GlobalSummaryType;
+    return { convene, total, players, resonators, weapons, pities, fiveStars } satisfies GlobalSummaryType;
  }
 
 
@@ -49,6 +51,7 @@ export type GlobalSummaryType = {
 export function addGlobalSummary(a: GlobalSummaryType, b: GlobalSummaryType) {
     const convene = a.convene ?? b.convene;
     const total = a.total + b.total;
+    const players = a.players + b.players;
     const resonators = a.resonators + b.resonators;
     const weapons = a.weapons + b.weapons;
     const fiveStars = { ...a.fiveStars };
@@ -63,7 +66,7 @@ export function addGlobalSummary(a: GlobalSummaryType, b: GlobalSummaryType) {
         }
     }
 
-    return { convene, total, resonators, weapons, fiveStars, pities } as GlobalSummaryType;
+    return { convene, total, players, resonators, weapons, fiveStars, pities } satisfies GlobalSummaryType;
 }
 
 
@@ -71,6 +74,7 @@ export function addGlobalSummary(a: GlobalSummaryType, b: GlobalSummaryType) {
  export function subGlobalSummary(a: GlobalSummaryType, b: GlobalSummaryType) {
     const convene = a.convene ?? b.convene;
     const total = a.total - b.total;
+    const players = a.players - b.players;
     const resonators = a.resonators - b.resonators;
     const weapons = a.weapons - b.weapons;
     const fiveStars = { ...a.fiveStars };
@@ -85,5 +89,5 @@ export function addGlobalSummary(a: GlobalSummaryType, b: GlobalSummaryType) {
         }
     }
 
-    return { convene, total, resonators, weapons, fiveStars, pities } as GlobalSummaryType;
+    return { convene, total, players, resonators, weapons, fiveStars, pities } satisfies GlobalSummaryType;
  }
