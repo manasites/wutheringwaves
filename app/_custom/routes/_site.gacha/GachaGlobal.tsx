@@ -1,19 +1,35 @@
+import { useState } from "react";
+
 import type { SerializeFrom } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 
+import { Button } from "~/components/Button";
 import { H2 } from "~/components/Headers";
 import { Image } from "~/components/Image";
 
-import type { GlobalSummaryType } from "./addToGlobal";
-import type { loader, RollData } from "./route";
-import { Histogram } from "./Histogram";
+import { DatesChart } from "./DatesChart";
+import { PitiesChart } from "./PitiesChart";
+import type { loader } from "./route";
 
 export function GachaGlobal({
    summary,
 }: {
    summary: SerializeFrom<typeof loader>["globalSummary"];
 }) {
+   const [resourceId, setResourceId] = useState<string | null>(null);
+
    if (!summary) return null;
+
+   const pities = resourceId
+      ? summary.fiveStars[resourceId]?.pities
+      : summary.pities;
+
+   const dates = resourceId
+      ? summary.fiveStars[resourceId]?.dates
+      : summary.dates;
+
+   console.log({ dates, pities });
+
    return (
       <div className="bg-white dark:bg-neutral-900 rounded-lg p-4">
          <div className="flex flex-col gap-y-1">
@@ -45,46 +61,71 @@ export function GachaGlobal({
                </div>
             </div>
          </div>
-         <PityGraph pities={summary.pities} />
+         <FiveStars
+            fiveStars={Object.keys(summary.fiveStars)}
+            setResourceId={setResourceId}
+         />
+         {dates && <DatesChart dates={dates} />}
+         {pities && <PitiesChart pities={pities} />}
       </div>
    );
 }
 
-// Present pity as a Histogram
-function PityGraph({ pities }: { pities: number[] }) {
-   const labels = pities.map((_, i) => i);
-   const data = pities;
-   const color = "rgba(0, 0, 255, 0.5)";
-   const title = "Pity Histogram";
-   return <Histogram x={labels} y={data} color={color} title={title} />;
+function FiveStars({
+   fiveStars,
+   setResourceId,
+}: {
+   fiveStars: string[];
+   setResourceId: React.Dispatch<React.SetStateAction<string | null>>;
+}) {
+   console.log({ fiveStars });
+   return (
+      <div className="flex flex-col gap-y-1">
+         <div className="relative inline-block text-center align-middle">
+            <div className="relative m-1 w-full rounded-md border p-2 dark:border-gray-700">
+               {fiveStars
+                  .map((resourceId) => (
+                     <WarpFrame
+                        resourceId={resourceId}
+                        key={resourceId}
+                        setResourceId={setResourceId}
+                     />
+                  ))
+                  .reverse()}
+            </div>
+         </div>
+      </div>
+   );
 }
 
-function WarpFrame({ roll }: { roll: RollData }) {
+function WarpFrame({
+   resourceId,
+   setResourceId,
+}: {
+   resourceId: string;
+   setResourceId: React.Dispatch<React.SetStateAction<string | null>>;
+}) {
    const { weapons, resonators } = useLoaderData<typeof loader>();
 
-   let entry: any;
+   let entry =
+      weapons?.find((w) => w.id == resourceId) ??
+      resonators?.find((w) => w.id == resourceId) ??
+      null;
 
-   switch (roll.resourceType) {
-      case "Weapons":
-         entry = weapons?.find((w) => w.id == roll.resourceId);
-         return (
-            <Link to={`/c/weapons/${entry?.slug}`}>
-               <ItemFrame entry={entry} roll={roll} />
-            </Link>
-         );
-      case "Resonators":
-         entry = resonators?.find((w) => w.id == roll.resourceId);
-         return (
-            <Link to={`/c/resonators/${entry?.slug}`}>
-               <ItemFrame entry={entry} roll={roll} />
-            </Link>
-         );
-      default:
-         return <div>Unknown Resource Type</div>;
-   }
+   return entry ? (
+      <Button
+         onClick={() =>
+            setResourceId((oldId) => (oldId === resourceId ? null : resourceId))
+         }
+         outline
+      >
+         <ItemFrame entry={entry} />
+      </Button>
+   ) : null;
 }
 
-function ItemFrame({ entry, roll }: any) {
+function ItemFrame({ entry }: any) {
+   console.log(entry);
    // mat holds material information
    return (
       <div
@@ -100,9 +141,6 @@ function ItemFrame({ entry, roll }: any) {
                } material-frame`}
                alt={entry?.name}
             />
-            <div className="absolute top-0 right-0 bg-white/50 text-black p-1 text-xs rounded-md ">
-               {roll.pity}
-            </div>
          </div>
       </div>
    );

@@ -240,7 +240,9 @@ export default function HomePage() {
             value="Submit Summary to global"
             onClick={saveSummary}
          />
-         {/* <GachaGlobal summary={loaderData.globalSummary} /> */}
+         {loaderData.globalSummary && (
+            <GachaGlobal summary={loaderData.globalSummary} />
+         )}
          <GachaSummary summary={summary} />
          <GachaHistory summary={summary} />
       </div>

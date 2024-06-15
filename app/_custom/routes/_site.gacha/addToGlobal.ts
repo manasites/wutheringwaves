@@ -109,11 +109,11 @@ export function addGlobalSummary(a: GlobalSummaryType, b: GlobalSummaryType) {
 }
 
 export function addAandB(
-   a: Record<string, number> | undefined,
+   a: Record<string, number>,
    b: Record<string, number> | undefined,
 ) {
-   if (a && !b) return a;
-   if (!a && b) return b;
+   if (!b) return a;
+   if (!a) return b;
    const dates = { ...a };
    for (const date of Object.keys(b)) {
       dates[date] = (dates[date] || 0) + (b[date] || 0);
@@ -121,9 +121,12 @@ export function addAandB(
    return dates;
 }
 
-export function subAandB(a: Record<string, number>, b: Record<string, number>) {
-   if (a && !b) return a;
-   if (!a && b) return b;
+export function subAandB(
+   a: Record<string, number>,
+   b: Record<string, number> | undefined,
+) {
+   if (!b) return a;
+   if (!a) return b;
 
    const dates = { ...a };
    for (const date of Object.keys(b)) {

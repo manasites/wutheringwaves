@@ -49,6 +49,9 @@ function generateDatesLabels(dates: Record<string, number>) {
    try {
       let start = new Date(startDate);
       let end = new Date(endDate);
+
+      // if (start === end) end.setDate(start.getDate() + 14);
+
       dateArray = [];
 
       for (let dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
