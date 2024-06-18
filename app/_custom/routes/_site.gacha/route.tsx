@@ -169,6 +169,13 @@ export default function HomePage() {
                </option>
             ))}
          </select>
+
+         <div className="flex flex-col gap-y-1">
+            <H2 text={loaderData.convene?.name ?? "Convene"} />
+         </div>
+         {loaderData.globalSummary && (
+            <GachaGlobal summary={loaderData.globalSummary} />
+         )}
          <Form
             method="POST"
             navigate={false}
@@ -207,12 +214,6 @@ export default function HomePage() {
                />
                <label htmlFor="refresh">Auto Refresh</label> */}
          </Form>
-         <div className="flex flex-col gap-y-1">
-            <H2 text={loaderData.convene?.name ?? "Convene"} />
-         </div>
-         {loaderData.globalSummary && (
-            <GachaGlobal summary={loaderData.globalSummary} />
-         )}
          {playerSummary && <GachaSummary summary={playerSummary} />}
          {playerSummary && <GachaHistory summary={playerSummary} />}
       </div>
