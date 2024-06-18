@@ -10,7 +10,6 @@ import {
    useSubmit,
 } from "@remix-run/react";
 import { z } from "zod";
-import { zx } from "zodix";
 
 import type {
    ConveneType,
@@ -119,25 +118,15 @@ export default function HomePage() {
 
       const body = new FormData(e.currentTarget);
 
-      //convert e to a Request object
-      const request = new Request(e.currentTarget.action, {
-         method: e.currentTarget.method,
-         body,
-      });
-
-      const result = await getConveneData({ request });
+      const result = await getConveneData({ body });
 
       console.log("this is a local fetch: ", result);
 
-      if (result.error) return alert("Error fetching data");
-
-      // add playerSummary to body
-      body.append("summary", JSON.stringify(result.playerSummary));
-      body.append("playerId", JSON.stringify(result.playerId));
+      if (!result || result.error) return alert("Error fetching data");
 
       // if global is checked, submit to global
 
-      submit(body, {
+      submit(result, {
          method: "POST",
          navigate: false,
          encType: "application/json",
@@ -197,16 +186,12 @@ const WuwaPayloadSchema = z.object({
 });
 
 // we'll fetch the data on the client side then save it to the server
-export async function getConveneData({ request }: { request: Request }) {
-   const { url, convene, global } = await zx.parseForm(
-      request,
-      {
-         url: z.string(),
-         convene: z.string(),
-         global: zx.BoolAsString,
-      },
-      { message: "Invalid URL" },
-   );
+export async function getConveneData({ body }: { body: FormData }) {
+   const url = body.get("url") as string;
+   const convene = (body.get("convene") as string) || "1";
+   const global = body.get("global") as string;
+
+   if (!url) return { error: "No URL provided" };
 
    try {
       const searchParams = new URLSearchParams(url?.split("?")?.[1]);
@@ -232,12 +217,15 @@ export async function getConveneData({ request }: { request: Request }) {
 
       const gacha = (await await response.json()) as { data: Array<RollData> };
 
-      const playerSummary = getSummary(gacha, convene);
+      const summary = getSummary(gacha, convene);
 
       return {
          gacha,
-         playerSummary,
+         summary,
          playerId: wuwaPayload.playerId,
+         convene,
+         global,
+         url,
       };
    } catch (e) {
       console.error(e);
@@ -264,6 +252,7 @@ export async function action({
 
    const globalId = "wuwa-convene-" + convene;
 
+   // Check if these exists first
    let oldPlayerSummary: GachaSummaryType | undefined = undefined,
       oldGlobalSummary: GlobalSummaryType | undefined = undefined;
 
@@ -275,7 +264,10 @@ export async function action({
             overrideAccess: true,
          })
       )?.data as GachaSummaryType;
-
+   } catch (e) {
+      console.error(e);
+   }
+   try {
       oldGlobalSummary = (
          await payload.findByID({
             collection: "user-data",
@@ -296,6 +288,15 @@ export async function action({
    const newGlobalSummary = oldGlobalSummary
       ? addGlobalSummary(oldGlobalSummary, addToGlobal)
       : addToGlobal;
+
+   console.log({
+      id,
+      globalId,
+      oldPlayerSummary,
+      oldGlobalSummary,
+      addToGlobal,
+      newGlobalSummary,
+   });
 
    try {
       // First we'll update the user record with the new summary
