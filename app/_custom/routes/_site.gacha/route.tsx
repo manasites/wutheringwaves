@@ -5,12 +5,12 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
    Form,
-   useActionData,
    useLoaderData,
    useSearchParams,
+   useSubmit,
 } from "@remix-run/react";
-import type { ClientActionFunctionArgs } from "@remix-run/react";
 import { z } from "zod";
+import { zx } from "zodix";
 
 import type {
    ConveneType,
@@ -30,8 +30,6 @@ import { GachaGlobal } from "./GachaGlobal";
 import { GachaHistory } from "./GachaHistory";
 import { GachaSummary } from "./GachaSummary";
 import { type GachaSummaryType, getSummary } from "./getSummary";
-import { err } from "node_modules/inngest/types";
-import { zx } from "zodix";
 
 export type RollData = {
    pity?: number;
@@ -105,30 +103,59 @@ export async function loader({
       convene: conveneTypes?.find((c) => c.id === convene),
       globalSummary,
       playerSummary,
-      wuwaURL,
    });
 }
 
 export default function HomePage() {
    const [searchParams] = useSearchParams();
    const loaderData = useLoaderData<typeof loader>();
-   const actionData = useActionData<typeof clientAction>();
+   const submit = useSubmit();
 
-   console.log(actionData);
+   const playerSummary = loaderData.playerSummary;
 
-   const playerSummary = actionData?.playerSummary ?? loaderData.playerSummary;
+   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+      // We want to fetch from the client, so submit it manually
+      e.preventDefault();
+
+      const body = new FormData(e.currentTarget);
+
+      //convert e to a Request object
+      const request = new Request(e.currentTarget.action, {
+         method: e.currentTarget.method,
+         body,
+      });
+
+      const result = await getConveneData({ request });
+
+      console.log("this is a local fetch: ", result);
+
+      if (result.error) return alert("Error fetching data");
+
+      // add playerSummary to body
+      body.append("summary", JSON.stringify(result.playerSummary));
+      body.append("playerId", JSON.stringify(result.playerId));
+
+      // if global is checked, submit to global
+
+      submit(body, {
+         method: "POST",
+         navigate: false,
+         encType: "application/json",
+      });
+   }
 
    return (
       <div className="mx-auto max-w-[728px] max-laptop:p-3 laptop:pb-20">
          <H2 text="Warp History" />
          <div className="justify-left flex items-center gap-x-1">
-            <Form method="POST">
+            <Form method="POST" navigate={false} onSubmit={onSubmit}>
                <label htmlFor="url">Import URL</label>
                <input
                   name="url"
-                  placeholder=""
+                  placeholder="Insert URL here"
                   type="url"
                   className="w-full"
+                  defaultValue="https://aki-gm-resources-oversea.aki-game.net/aki/gacha/index.html#/record?svr_id=591d6af3a3090d8ea00d8f86cf6d7501&player_id=500016561&lang=en&gacha_id=4&gacha_type=6&svr_area=global&record_id=cb1d1f2269e5442124eff6540823a570&resources_id=917dfa695d6c6634ee4e972bb9168f6a"
                   required
                />
                <select
@@ -170,15 +197,15 @@ const WuwaPayloadSchema = z.object({
 });
 
 // we'll fetch the data on the client side then save it to the server
-export async function clientAction({ request }: ClientActionFunctionArgs) {
-   const { url, convene, global } = zx.parseQuery(
+export async function getConveneData({ request }: { request: Request }) {
+   const { url, convene, global } = await zx.parseForm(
       request,
       {
          url: z.string(),
          convene: z.string(),
-         global: z.boolean(),
+         global: zx.BoolAsString,
       },
-      { message: "Missing required parameters", status: 400 },
+      { message: "Invalid URL" },
    );
 
    try {
@@ -207,7 +234,11 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
 
       const playerSummary = getSummary(gacha, convene);
 
-      return { gacha, playerSummary };
+      return {
+         gacha,
+         playerSummary,
+         playerId: wuwaPayload.playerId,
+      };
    } catch (e) {
       console.error(e);
       return { error: e };
@@ -219,17 +250,19 @@ export async function action({
    request,
    context: { user, payload },
 }: ActionFunctionArgs) {
-   const { base_payload, summary } = JSON.parse(await request.text()) as {
-      base_payload: any;
+   const { url, convene, summary, playerId } = JSON.parse(
+      await request.text(),
+   ) as {
+      url: string;
+      convene: string;
+      global: string;
       summary: GachaSummaryType;
+      playerId: string;
    };
 
-   console.log({ base_payload, summary });
+   const id = "wuwa-" + playerId + "-" + convene;
 
-   const id =
-      "wuwa-" + base_payload?.playerId + "-" + base_payload?.cardPoolType;
-
-   const globalId = "wuwa-convene-" + base_payload?.cardPoolType;
+   const globalId = "wuwa-convene-" + convene;
 
    let oldPlayerSummary: GachaSummaryType | undefined = undefined,
       oldGlobalSummary: GlobalSummaryType | undefined = undefined;
