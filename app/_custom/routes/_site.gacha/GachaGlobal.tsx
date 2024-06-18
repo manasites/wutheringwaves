@@ -149,7 +149,7 @@ function ItemFrame({ entry, total }: any) {
                alt={entry?.name}
             />
             <div className="absolute top-0 right-0 bg-white/50 text-black p-1 text-xs rounded-md ">
-               {total}
+               x{total}
             </div>
          </div>
       </div>

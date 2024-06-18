@@ -142,8 +142,8 @@ function ItemFrame({ entry, roll }: any) {
                } material-frame`}
                alt={entry?.name}
             />
-            <div className="absolute bottom-0 right-0 bg-white/50 text-black p-1 text-xs rounded-md ">
-               {roll.pity}
+            <div className="absolute top-0 right-0 bg-white/50 text-black p-1 text-xs rounded-md ">
+               #{roll.pity}
             </div>
          </div>
       </div>
