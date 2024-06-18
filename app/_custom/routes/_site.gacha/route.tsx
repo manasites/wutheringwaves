@@ -6,6 +6,7 @@ import { json, redirect } from "@remix-run/node";
 import {
    Form,
    useLoaderData,
+   useNavigate,
    useSearchParams,
    useSubmit,
 } from "@remix-run/react";
@@ -81,7 +82,7 @@ export async function loader({
             })
          ).data as T;
       } catch (e) {
-         console.error(e);
+         console.error(id, e);
          return null;
       }
    }
@@ -90,12 +91,24 @@ export async function loader({
       "wuwa-convene-" + convene,
    );
 
-   // this should be playerId from either cookie wuwa-url or wuwa-user;
-   const playerId = searchParams.get("playerId") || "500016561";
+   // check user data for wuwa-url
+   const userData = await fetchSummary<{
+      url: string;
+      save: string;
+      refresh: string;
+   }>("wuwa-" + user?.id);
 
-   const playerSummary = await fetchSummary<GachaSummaryType>(
-      "wuwa-" + playerId + "-" + convene,
-   );
+   // check request cookie for wuwa-url
+   let cookieURL = request.headers.get("Cookie")?.split("wuwa-url=")?.[1];
+   if (cookieURL && userData) userData.url = cookieURL;
+
+   const playerId = userData?.url
+      ? new URL(userData.url)?.searchParams.get("player_id")
+      : null;
+
+   const playerSummary = playerId
+      ? await fetchSummary<GachaSummaryType>("wuwa-" + playerId + "-" + convene)
+      : null;
 
    return json({
       resonators,
@@ -104,6 +117,7 @@ export async function loader({
       convene: conveneTypes?.find((c) => c.id === convene),
       globalSummary,
       playerSummary,
+      userData,
    });
 }
 
@@ -111,6 +125,7 @@ export default function HomePage() {
    const [searchParams] = useSearchParams();
    const loaderData = useLoaderData<typeof loader>();
    const submit = useSubmit();
+   const navigate = useNavigate();
 
    const playerSummary = loaderData.playerSummary;
 
@@ -139,36 +154,52 @@ export default function HomePage() {
 
    return (
       <div className="mx-auto max-w-[728px] max-laptop:p-3 laptop:pb-20">
-         <H2 text="Warp History" />
-         <div className="justify-left flex items-center gap-x-1">
-            <Form method="POST" navigate={false} onSubmit={onSubmit}>
-               <label htmlFor="url">Import URL</label>
-               <input
-                  name="url"
-                  placeholder="Insert URL here"
-                  type="url"
-                  className="w-full"
-                  defaultValue="https://aki-gm-resources-oversea.aki-game.net/aki/gacha/index.html#/record?svr_id=591d6af3a3090d8ea00d8f86cf6d7501&player_id=500016561&lang=en&gacha_id=4&gacha_type=6&svr_area=global&record_id=cb1d1f2269e5442124eff6540823a570&resources_id=917dfa695d6c6634ee4e972bb9168f6a"
-                  required
+         <select
+            className="my-2 inline-flex rounded-sm border p-2 dark:bg-neutral-800 w-full"
+            name="convene"
+            defaultValue={searchParams.get("convene") ?? "1"}
+            onChange={(e) => navigate("/gacha?convene=" + e.target.value)}
+         >
+            {loaderData?.conveneTypes?.map((convene) => (
+               <option key={convene.id} value={convene.id}>
+                  {convene.name}
+               </option>
+            ))}
+         </select>
+         <Form
+            method="POST"
+            navigate={false}
+            onSubmit={onSubmit}
+            className="justify-left flex items-center gap-x-1"
+         >
+            <label htmlFor="url">Import URL</label>
+            <input
+               name="url"
+               placeholder="Insert URL here"
+               type="url"
+               className="w-full"
+               defaultValue={loaderData.userData?.url ?? ""}
+               required
+            />
+            <input
+               hidden
+               name="convene"
+               value={searchParams.get("convene") ?? "1"}
+            />
+            <input type="submit" value="Import" />
+            <input
+               type="checkbox"
+               name="save"
+               defaultChecked={Boolean(loaderData.userData?.save)}
+            />
+            <label htmlFor="save">Global</label>
+            {/* <input
+                  type="checkbox"
+                  name="refresh"
+                  defaultChecked={Boolean(loaderData.userData?.refresh)}
                />
-               <select
-                  className="my-2 inline-flex rounded-sm border p-2 dark:bg-neutral-800"
-                  name="convene"
-                  defaultValue={searchParams.get("convene") ?? "1"}
-                  required
-               >
-                  {loaderData?.conveneTypes?.map((convene) => (
-                     <option key={convene.id} value={convene.id}>
-                        {convene.name}
-                     </option>
-                  ))}
-               </select>
-               <input type="submit" value="Import" />
-               <input type="checkbox" name="save" defaultChecked={true} />
-               <input type="checkbox" name="refresh" defaultChecked={false} />
-               <label htmlFor="global">Global</label>
-            </Form>
-         </div>
+               <label htmlFor="refresh">Auto Refresh</label> */}
+         </Form>
          <div className="flex flex-col gap-y-1">
             <H2 text={loaderData.convene?.name ?? "Convene"} />
          </div>
