@@ -20,14 +20,6 @@ export const UserData: CollectionConfig = {
    },
    fields: [
       {
-         name: "id",
-         type: "text",
-      },
-      {
-         name: "data",
-         type: "json",
-      },
-      {
          name: "author",
          type: "relationship",
          relationTo: "users",
@@ -45,6 +37,14 @@ export const UserData: CollectionConfig = {
          hasMany: false,
          required: true,
          maxDepth: 1,
+      },
+      {
+         name: "id",
+         type: "text",
+      },
+      {
+         name: "data",
+         type: "json",
       },
    ],
 };
