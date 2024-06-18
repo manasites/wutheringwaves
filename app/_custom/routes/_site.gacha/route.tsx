@@ -184,7 +184,7 @@ export default function HomePage() {
             <input
                hidden
                name="convene"
-               value={searchParams.get("convene") ?? "1"}
+               defaultValue={searchParams.get("convene") ?? "1"}
             />
             <input type="submit" value="Import" />
             <input
