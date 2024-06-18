@@ -100,11 +100,14 @@ export async function loader({
 
    // check request cookie for wuwa-url
    let cookieURL = request.headers.get("Cookie")?.split("wuwa-url=")?.[1];
-   if (cookieURL && userData) userData.url = cookieURL;
 
-   const playerId = userData?.url
-      ? new URL(userData.url)?.searchParams.get("player_id")
+   const wuwaURL = cookieURL || userData?.url;
+
+   const playerId = wuwaURL
+      ? new URLSearchParams(wuwaURL)?.get("player_id")
       : null;
+
+   console.log({ cookieURL, userData, wuwaURL, playerId });
 
    const playerSummary = playerId
       ? await fetchSummary<GachaSummaryType>("wuwa-" + playerId + "-" + convene)
@@ -190,7 +193,11 @@ export default function HomePage() {
             <input
                type="checkbox"
                name="save"
-               defaultChecked={Boolean(loaderData.userData?.save)}
+               defaultChecked={
+                  loaderData.userData
+                     ? Boolean(loaderData.userData?.save)
+                     : true
+               }
             />
             <label htmlFor="save">Global</label>
             {/* <input
