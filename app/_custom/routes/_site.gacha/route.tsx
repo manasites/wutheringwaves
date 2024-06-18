@@ -2,13 +2,14 @@
 // Note all achievements and subcategories / total roll currency rewards will be included if possible.
 
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import {
    Form,
    useLoaderData,
    useSearchParams,
    useSubmit,
 } from "@remix-run/react";
+import type { Payload } from "payload";
 import { z } from "zod";
 
 import type {
@@ -29,6 +30,7 @@ import { GachaGlobal } from "./GachaGlobal";
 import { GachaHistory } from "./GachaHistory";
 import { GachaSummary } from "./GachaSummary";
 import { type GachaSummaryType, getSummary } from "./getSummary";
+import { use } from "i18next";
 
 export type RollData = {
    pity?: number;
@@ -126,6 +128,8 @@ export default function HomePage() {
 
       // if global is checked, submit to global
 
+      console.log(result);
+
       submit(result, {
          method: "POST",
          navigate: false,
@@ -150,7 +154,6 @@ export default function HomePage() {
                <select
                   className="my-2 inline-flex rounded-sm border p-2 dark:bg-neutral-800"
                   name="convene"
-                  onChange={(e) => e.currentTarget.form?.submit()}
                   defaultValue={searchParams.get("convene") ?? "1"}
                   required
                >
@@ -161,7 +164,8 @@ export default function HomePage() {
                   ))}
                </select>
                <input type="submit" value="Import" />
-               <input type="checkbox" name="global" defaultChecked={true} />
+               <input type="checkbox" name="save" defaultChecked={true} />
+               <input type="checkbox" name="refresh" defaultChecked={false} />
                <label htmlFor="global">Global</label>
             </Form>
          </div>
@@ -189,7 +193,8 @@ const WuwaPayloadSchema = z.object({
 export async function getConveneData({ body }: { body: FormData }) {
    const url = body.get("url") as string;
    const convene = (body.get("convene") as string) || "1";
-   const global = body.get("global") as string;
+   const save = body.get("save") as string;
+   const refresh = body.get("refresh") as string;
 
    if (!url) return { error: "No URL provided" };
 
@@ -224,7 +229,8 @@ export async function getConveneData({ body }: { body: FormData }) {
          summary,
          playerId: wuwaPayload.playerId,
          convene,
-         global,
+         refresh,
+         save,
          url,
       };
    } catch (e) {
@@ -233,23 +239,22 @@ export async function getConveneData({ body }: { body: FormData }) {
    }
 }
 
-// todo: currently we're skipping access controls
 export async function action({
    request,
    context: { user, payload },
 }: ActionFunctionArgs) {
-   const { url, convene, summary, playerId } = JSON.parse(
+   const { url, convene, summary, save, playerId, refresh } = JSON.parse(
       await request.text(),
    ) as {
       url: string;
       convene: string;
-      global: string;
+      save: string;
+      refresh: string;
       summary: GachaSummaryType;
       playerId: string;
    };
 
    const id = "wuwa-" + playerId + "-" + convene;
-
    const globalId = "wuwa-convene-" + convene;
 
    // Check if these exists first
@@ -310,6 +315,8 @@ export async function action({
                // @ts-expect-error this is fine
                site: "pogseal-imbhew2r8tg7",
             },
+            // for public access we're overriding access control here
+            overrideAccess: true,
          });
       } else {
          console.log("no result, inserting new record");
@@ -317,11 +324,15 @@ export async function action({
          await payload.create({
             collection: "user-data",
             data: {
+               id,
                data: summary,
                // @ts-expect-error this is fine
                site: "pogseal-imbhew2r8tg7",
-               id,
+               // @ts-expect-error we'll hardcode in an user for public access
+               author: user?.id ?? "6447492be887aa8eaee61a4f",
             },
+            // for public access we're overriding access control here
+            overrideAccess: true,
          });
       }
 
@@ -336,30 +347,69 @@ export async function action({
                // @ts-expect-error this is fine
                site: "pogseal-imbhew2r8tg7",
             },
+            // for public access we're overriding access control here
+            overrideAccess: true,
          });
       } else {
          // insert new record
          await payload.create({
             collection: "user-data",
             data: {
+               id: globalId,
                data: newGlobalSummary,
                // @ts-expect-error this is fine
                site: "pogseal-imbhew2r8tg7",
-               id: globalId,
+               // @ts-expect-error we'll hardcode in an user for public access
+               author: user?.id ?? "6447492be887aa8eaee61a4f",
             },
+            // for public access we're overriding access control here
+            overrideAccess: true,
          });
       }
    } catch (e) {
       console.error("Error updating userData ", id, e);
    }
 
-   return json({
-      success: true,
-      oldGlobalSummary,
-      newGlobalSummary,
-      addToGlobal,
+   // update user-data
+   const userData = await updateUserData(user, payload, {
+      url,
+      save,
+      refresh,
+   });
+
+   // redirect and set url to cookie
+   return redirect("/gacha?convene=" + convene, {
+      headers: {
+         "Set-Cookie": `wuwa-url=${url}; Path=/; Max-Age=31536000; SameSite=Strict`,
+      },
    });
 }
 
-// we don't want this to revalidate
-export const shouldRevalidate = () => false;
+async function updateUserData(user: any, payload: Payload, data: any) {
+   if (!user) return;
+
+   try {
+      return await payload.create({
+         collection: "user-data",
+         data: {
+            id: "wuwa-" + user.id,
+            data,
+            // @ts-expect-error this is fine
+            site: "pogseal-imbhew2r8tg7",
+            author: user.id,
+         },
+         user,
+         overrideAccess: false,
+      });
+   } catch (e) {
+      console.error(user.username + " updating wuwa user-data");
+
+      return await payload.update({
+         collection: "user-data",
+         id: "wuwa-" + user.id,
+         data,
+         user,
+         overrideAccess: false,
+      });
+   }
+}
