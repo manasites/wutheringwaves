@@ -4,12 +4,13 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
-   type ClientLoaderFunctionArgs,
    Form,
+   useActionData,
    useLoaderData,
    useSearchParams,
-   useSubmit,
 } from "@remix-run/react";
+import type { ClientActionFunctionArgs } from "@remix-run/react";
+import { z } from "zod";
 
 import type {
    ConveneType,
@@ -29,6 +30,8 @@ import { GachaGlobal } from "./GachaGlobal";
 import { GachaHistory } from "./GachaHistory";
 import { GachaSummary } from "./GachaSummary";
 import { type GachaSummaryType, getSummary } from "./getSummary";
+import { err } from "node_modules/inngest/types";
+import { zx } from "zodix";
 
 export type RollData = {
    pity?: number;
@@ -88,143 +91,52 @@ export async function loader({
       "wuwa-convene-" + convene,
    );
 
+   // this should be playerId from either cookie wuwa-url or wuwa-user;
+   const playerId = searchParams.get("playerId") || "500016561";
+
+   const playerSummary = await fetchSummary<GachaSummaryType>(
+      "wuwa-" + playerId + "-" + convene,
+   );
+
    return json({
       resonators,
       weapons,
       conveneTypes,
       convene: conveneTypes?.find((c) => c.id === convene),
       globalSummary,
-      gacha: { data: [] as RollData[] },
+      playerSummary,
+      wuwaURL,
    });
 }
-
-// we'll load player Data from the client
-export const clientLoader = async ({
-   request,
-   params,
-   serverLoader,
-}: ClientLoaderFunctionArgs) => {
-   // call the server loader
-   const serverData = await serverLoader<typeof loader>();
-
-   // get the cardPoolId from request searchParams
-   const { searchParams } = new URL(request.url);
-
-   const convene = searchParams.get("convene") || "1";
-
-   const gacha = await (
-      await getData({ convene, url: searchParams.get("url") })
-   ).json();
-
-   // Return the data to expose through useLoaderData()
-   return { ...serverData, gacha };
-};
-
-async function getData({
-   convene,
-   url,
-}: {
-   convene: string;
-   url: string | null;
-}) {
-   const { searchParams } = new URL(
-      url || "https://gmserver-api.aki-game2.net/gacha/record/query",
-   );
-
-   let base_payload = {
-      playerId: searchParams.get("playerId") || "500016561",
-      serverId:
-         searchParams.get("serverId") || "591d6af3a3090d8ea00d8f86cf6d7501",
-      languageCode: searchParams.get("languageCode") || "en",
-      cardPoolType: convene || "1",
-      recordId:
-         searchParams.get("recordId") || "cb1d1f2269e5442124eff6540823a570",
-   };
-
-   localStorage.setItem("base_payload", JSON.stringify(base_payload));
-
-   const response = await fetch(
-      "https://gmserver-api.aki-game2.net/gacha/record/query",
-      {
-         method: "POST",
-         headers: {
-            "Content-Type": "application/json",
-         },
-         body: JSON.stringify(base_payload),
-      },
-   );
-
-   return response;
-}
-
-clientLoader.hydrate = true;
-
-export const HydrateFallback = () => {
-   const [searchParams] = useSearchParams();
-   const loaderData = useLoaderData<typeof loader>();
-
-   return (
-      <div className="mx-auto max-w-[728px] max-laptop:p-3 laptop:pb-20">
-         <H2 text="Warp History" />
-         <div className="justify-left flex items-center gap-x-1 ">
-            <Form method="GET">
-               <label htmlFor="url">Import URL</label>
-               <input name="url" placeholder="" type="url" className="w-full" />
-               <select
-                  className="my-2 inline-flex rounded-sm border p-2 dark:bg-neutral-800"
-                  name="convene"
-                  onChange={(e) => e.currentTarget.form?.submit()}
-                  defaultValue={searchParams.get("convene") ?? "1"}
-               >
-                  {loaderData?.conveneTypes?.map((convene) => (
-                     <option key={convene.id} value={convene.id}>
-                        {convene.name}
-                     </option>
-                  ))}
-               </select>
-               <input type="submit" value="Submit" />
-            </Form>
-         </div>
-         <div className="flex items-center justify-center h-96">
-            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
-         </div>
-         {/* <GachaSummary /> */}
-         {/* <GachaGraph /> */}
-         {/* <GachaHistory /> */}
-      </div>
-   );
-};
 
 export default function HomePage() {
    const [searchParams] = useSearchParams();
    const loaderData = useLoaderData<typeof loader>();
-   const submit = useSubmit();
+   const actionData = useActionData<typeof clientAction>();
 
-   const summary = getSummary(loaderData);
+   console.log(actionData);
 
-   function saveSummary() {
-      const base_payload = JSON.parse(
-         localStorage.getItem("base_payload") || "{}",
-      );
-
-      submit(
-         { base_payload, summary },
-         { method: "POST", navigate: false, encType: "application/json" },
-      );
-   }
+   const playerSummary = actionData?.playerSummary ?? loaderData.playerSummary;
 
    return (
       <div className="mx-auto max-w-[728px] max-laptop:p-3 laptop:pb-20">
          <H2 text="Warp History" />
          <div className="justify-left flex items-center gap-x-1">
-            <Form method="GET">
+            <Form method="POST">
                <label htmlFor="url">Import URL</label>
-               <input name="url" placeholder="" type="url" className="w-full" />
+               <input
+                  name="url"
+                  placeholder=""
+                  type="url"
+                  className="w-full"
+                  required
+               />
                <select
                   className="my-2 inline-flex rounded-sm border p-2 dark:bg-neutral-800"
                   name="convene"
                   onChange={(e) => e.currentTarget.form?.submit()}
                   defaultValue={searchParams.get("convene") ?? "1"}
+                  required
                >
                   {loaderData?.conveneTypes?.map((convene) => (
                      <option key={convene.id} value={convene.id}>
@@ -232,24 +144,74 @@ export default function HomePage() {
                      </option>
                   ))}
                </select>
-               <input type="submit" value="Submit" />
+               <input type="submit" value="Import" />
+               <input type="checkbox" name="global" defaultChecked={true} />
+               <label htmlFor="global">Global</label>
             </Form>
          </div>
-         <input
-            type="button"
-            value="Submit Summary to global"
-            onClick={saveSummary}
-         />
          <div className="flex flex-col gap-y-1">
             <H2 text={loaderData.convene?.name ?? "Convene"} />
          </div>
          {loaderData.globalSummary && (
             <GachaGlobal summary={loaderData.globalSummary} />
          )}
-         <GachaSummary summary={summary} />
-         <GachaHistory summary={summary} />
+         {playerSummary && <GachaSummary summary={playerSummary} />}
+         {playerSummary && <GachaHistory summary={playerSummary} />}
       </div>
    );
+}
+
+const WuwaPayloadSchema = z.object({
+   playerId: z.string(),
+   serverId: z.string(),
+   languageCode: z.string(),
+   cardPoolType: z.string(),
+   recordId: z.string(),
+});
+
+// we'll fetch the data on the client side then save it to the server
+export async function clientAction({ request }: ClientActionFunctionArgs) {
+   const { url, convene, global } = zx.parseQuery(
+      request,
+      {
+         url: z.string(),
+         convene: z.string(),
+         global: z.boolean(),
+      },
+      { message: "Missing required parameters", status: 400 },
+   );
+
+   try {
+      const searchParams = new URLSearchParams(url?.split("?")?.[1]);
+
+      const wuwaPayload = WuwaPayloadSchema.parse({
+         playerId: searchParams.get("player_id"),
+         serverId: searchParams.get("svr_id"),
+         languageCode: searchParams.get("lang"),
+         cardPoolType: convene,
+         recordId: searchParams.get("record_id"),
+      });
+
+      const response = await fetch(
+         "https://gmserver-api.aki-game2.net/gacha/record/query",
+         {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json",
+            },
+            body: JSON.stringify(wuwaPayload),
+         },
+      );
+
+      const gacha = (await await response.json()) as { data: Array<RollData> };
+
+      const playerSummary = getSummary(gacha, convene);
+
+      return { gacha, playerSummary };
+   } catch (e) {
+      console.error(e);
+      return { error: e };
+   }
 }
 
 // todo: currently we're skipping access controls
