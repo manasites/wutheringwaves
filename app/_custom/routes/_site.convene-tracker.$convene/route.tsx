@@ -7,7 +7,7 @@ import {
    Form,
    useLoaderData,
    useNavigate,
-   useSearchParams,
+   useParams,
    useSubmit,
 } from "@remix-run/react";
 import type { Payload } from "payload";
@@ -68,9 +68,7 @@ export async function loader({
       )
    )?.docs;
 
-   const { searchParams } = new URL(request.url);
-
-   const convene = searchParams.get("convene") || "1";
+   const convene = params.convene || "1";
 
    // we'll avoid access control for global summary
    async function fetchSummary<T>(id: string) {
@@ -126,7 +124,7 @@ export async function loader({
 }
 
 export default function HomePage() {
-   const [searchParams] = useSearchParams();
+   const { convene } = useParams();
    const loaderData = useLoaderData<typeof loader>();
    const submit = useSubmit();
    const navigate = useNavigate();
@@ -162,8 +160,8 @@ export default function HomePage() {
             className="dark:text-zinc-100 mt-8 mb-3 p-3.5 leading-7 dark:bg-dark400 bg-zinc-50 block shadow-sm dark:shadow-zinc-800/70 border-zinc-200/70
       font-header relative text-lg scroll-mt-32 laptop:scroll-mt-60 rounded-l rounded-r-md py-2 overflow-hidden border shadow-zinc-50 dark:border-zinc-700 w-full"
             name="convene"
-            defaultValue={searchParams.get("convene") ?? "1"}
-            onChange={(e) => navigate("/gacha?convene=" + e.target.value)}
+            defaultValue={convene ?? "1"}
+            onChange={(e) => navigate("/convene-tracker/" + e.target.value)}
          >
             {loaderData?.conveneTypes?.map((convene) => (
                <option key={convene.id} value={convene.id}>
@@ -178,7 +176,7 @@ export default function HomePage() {
          <h2
             className="dark:shadow-zinc-800/50 border-color relative mb-2.5 mt-8 overflow-hidden rounded-lg
       border-2 font-header text-xl font-bold shadow-sm shadow-zinc-50 dark:bg-dark350"
-            id="import"
+            id="track"
          >
             <div
                className="pattern-dots absolute left-0
@@ -205,11 +203,7 @@ export default function HomePage() {
                defaultValue={loaderData.userData?.url ?? ""}
                required
             />
-            <input
-               hidden
-               name="convene"
-               defaultValue={searchParams.get("convene") ?? "1"}
-            />
+            <input hidden name="convene" defaultValue={convene ?? "1"} />
             <Button type="submit" value="Import">
                Import
             </Button>
@@ -432,7 +426,7 @@ export async function action({
    });
 
    // redirect and set url to cookie
-   return redirect("/gacha?convene=" + convene, {
+   return redirect(`/convene-tracker/${convene}#track`, {
       headers: {
          "Set-Cookie": `wuwa-url=${url}; Path=/; Max-Age=31536000; SameSite=Strict`,
       },
