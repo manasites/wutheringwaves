@@ -41,29 +41,35 @@ export function GachaSummary({ summary }: { summary: GachaSummaryType }) {
                   <span>{summary.total}</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">Worth:</span>
-                  <span>{summary.total * 160}</span>
-               </div>
-               <div className="flex gap-x-2">
-                  <span className="font-bold">5* Current Pity:</span>
-                  <span>{summary.pity5}</span>
-               </div>
-               <div className="flex gap-x-2">
-                  <span className="font-bold">4* Current Pity:</span>
-                  <span>{summary.pity4}</span>
-               </div>
-               <div className="flex gap-x-2">
                   <span className="font-bold">Resonators:</span>
                   <span>{summary.resonators}</span>
+               </div>
+               <div className="flex gap-x-2">
+                  <span className="font-bold">Worth:</span>
+                  <span>{summary.total * 160}</span>
                </div>
                <div className="flex gap-x-2">
                   <span className="font-bold">Weapons:</span>
                   <span>{summary.weapons}</span>
                </div>
+            </div>
+         </div>
+         <div //two columns
+            className="columns-2"
+         >
+            <div className="flex flex-col gap-y-1">
                <div className="flex gap-x-2">
                   <span className="font-bold">5★ Convenes:</span>
                   <span>{summary.fiveStars.length}</span>
                   <span>({fiveStarPercentage}%)</span>
+               </div>
+               <div className="flex gap-x-2">
+                  <span className="font-bold">5★ Current Pity:</span>
+                  <span>{summary.pity5}</span>
+               </div>
+               <div className="flex gap-x-2">
+                  <span className="font-bold">5★ Avg Pity:</span>
+                  <span>{fiveStarPity}</span>
                </div>
                <div className="flex gap-x-2">
                   <span className="font-bold">4★ Convenes:</span>
@@ -71,11 +77,11 @@ export function GachaSummary({ summary }: { summary: GachaSummaryType }) {
                   <span>({fourStarPercentage}%)</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">5★ Median:</span>
-                  <span>{fiveStarPity}</span>
+                  <span className="font-bold">4★ Current Pity:</span>
+                  <span>{summary.pity4}</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">4★ Median:</span>
+                  <span className="font-bold">4★ Avg Pity:</span>
                   <span>{fourStarPity}</span>
                </div>
             </div>

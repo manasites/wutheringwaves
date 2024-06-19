@@ -202,7 +202,7 @@ export default function HomePage() {
                defaultValue={loaderData.wuwaURL}
                required
             />
-            <input hidden name="convene" defaultValue={convene ?? "1"} />
+            <input hidden name="convene" value={convene ?? "1"} />
             <Button type="submit" value="Import">
                Import
             </Button>
@@ -213,8 +213,9 @@ export default function HomePage() {
                      ? Boolean(loaderData.userData?.save)
                      : true
                }
-            />
-            <label htmlFor="save">Share</label>
+            >
+               Share
+            </Checkbox>
             {/* <input
                   type="checkbox"
                   name="refresh"
