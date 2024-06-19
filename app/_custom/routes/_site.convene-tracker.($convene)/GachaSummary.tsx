@@ -45,11 +45,11 @@ export function GachaSummary({ summary }: { summary: GachaSummaryType }) {
                   <span>{summary.total * 160}</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">Current 5* Pity:</span>
+                  <span className="font-bold">5* Current Pity:</span>
                   <span>{summary.pity5}</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">Current 4* Pity:</span>
+                  <span className="font-bold">4* Current Pity:</span>
                   <span>{summary.pity4}</span>
                </div>
                <div className="flex gap-x-2">
