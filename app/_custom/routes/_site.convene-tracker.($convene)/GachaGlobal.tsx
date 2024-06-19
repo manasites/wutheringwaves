@@ -8,6 +8,7 @@ import { H2 } from "~/components/Headers";
 import { Image } from "~/components/Image";
 
 import { DatesChart } from "./DatesChart";
+import { LineandBarChart } from "./LineandBarChart";
 import { PitiesChart } from "./PitiesChart";
 import type { loader } from "./route";
 
@@ -67,6 +68,7 @@ export function GachaGlobal({
          />
          {dates && <DatesChart dates={dates} />}
          {pities && <PitiesChart pities={pities} />}
+         {pities && <LineandBarChart pities={pities} />}
       </div>
    );
 }

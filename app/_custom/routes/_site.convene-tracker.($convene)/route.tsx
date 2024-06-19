@@ -106,8 +106,6 @@ export async function loader({
       ? new URLSearchParams(wuwaURL)?.get("player_id")
       : null;
 
-   console.log({ cookieURL, userData, wuwaURL, playerId });
-
    const playerSummary = playerId
       ? await fetchSummary<GachaSummaryType>("wuwa-" + playerId + "-" + convene)
       : null;
@@ -120,6 +118,7 @@ export async function loader({
       globalSummary,
       playerSummary,
       userData,
+      wuwaURL,
    });
 }
 
@@ -200,7 +199,7 @@ export default function HomePage() {
                placeholder="Insert URL here"
                type="url"
                className="w-full"
-               defaultValue={loaderData.userData?.url ?? ""}
+               defaultValue={loaderData.wuwaURL}
                required
             />
             <input hidden name="convene" defaultValue={convene ?? "1"} />
