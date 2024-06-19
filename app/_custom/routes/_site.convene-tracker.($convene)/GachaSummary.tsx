@@ -1,4 +1,4 @@
-import { Link, useLoaderData } from "@remix-run/react";
+import { Link, useRouteLoaderData } from "@remix-run/react";
 
 import { H2 } from "~/components/Headers";
 import { Image } from "~/components/Image";
@@ -108,7 +108,9 @@ function FiveStars({ summary }: { summary: GachaSummaryType }) {
 }
 
 function WarpFrame({ roll }: { roll: RollData }) {
-   const { weapons, resonators } = useLoaderData<typeof loader>();
+   const { weapons, resonators } = useRouteLoaderData<typeof loader>(
+      "_custom/routes/_site.convene-tracker.($convene)/route",
+   )!;
 
    let entry: any;
 

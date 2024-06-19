@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import type { SerializeFrom } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useRouteLoaderData } from "@remix-run/react";
 
 import { Button } from "~/components/Button";
 import { H2 } from "~/components/Headers";
@@ -121,7 +121,9 @@ function WarpFrame({
    setResourceId: React.Dispatch<React.SetStateAction<string | null>>;
    pities: Record<string, number>;
 }) {
-   const { weapons, resonators } = useLoaderData<typeof loader>();
+   const { weapons, resonators } = useRouteLoaderData<typeof loader>(
+      "_custom/routes/_site.convene-tracker.($convene)/route",
+   )!;
 
    // sum of pities
    const total = Object.values(pities).reduce((a, b) => a + b, 0);

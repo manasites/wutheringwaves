@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Link, useLoaderData } from "@remix-run/react";
+import { Link, useRouteLoaderData } from "@remix-run/react";
 
 import { Checkbox } from "~/components/Checkbox";
 import { H2 } from "~/components/Headers";
@@ -101,7 +101,9 @@ function ResultFrame({ roll }: { roll: RollData }) {
 }
 
 function WeaponFrame({ roll }: { roll: RollData }) {
-   const { weapons } = useLoaderData<typeof loader>();
+   const { weapons } = useRouteLoaderData<typeof loader>(
+      "_custom/routes/_site.convene-tracker.($convene)/route",
+   )!;
 
    const entry = weapons?.find((w) => w.id == roll.resourceId);
 
@@ -126,7 +128,10 @@ function WeaponFrame({ roll }: { roll: RollData }) {
 }
 
 function ResonatorFrame({ roll }: { roll: RollData }) {
-   const { resonators } = useLoaderData<typeof loader>();
+   const { resonators } = useRouteLoaderData<typeof loader>(
+      "_custom/routes/_site.convene-tracker.($convene)/route",
+   )!;
+
    const entry = resonators?.find((r) => r.id == roll.resourceId);
    return (
       <Link to={`/c/resonators/${entry?.slug ?? entry?.id ?? ""}`}>
