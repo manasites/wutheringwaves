@@ -148,7 +148,7 @@ function ItemFrame({ entry, total }: any) {
                } material-frame`}
                alt={entry?.name}
             />
-            <div className="absolute top-0 right-0 bg-white/50 text-black p-1 text-xs rounded-md ">
+            <div className="absolute bottom-0 right-0 bg-white/50 text-black p-1 text-xs rounded-md ">
                x{total}
             </div>
          </div>
