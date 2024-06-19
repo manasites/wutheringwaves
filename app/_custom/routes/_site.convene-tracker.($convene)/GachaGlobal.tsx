@@ -28,6 +28,14 @@ export function GachaGlobal({
       ? summary.fiveStars[resourceId]?.dates
       : summary.dates;
 
+   // display five star percentage in shape of #.##%
+   const fiveStarPercentage = summary.fiveStar
+      ? ((summary.fiveStar / summary.total) * 100).toFixed(2)
+      : 0;
+   const fourStarPercentage = summary.fourStar
+      ? ((summary.fourStar / summary.total) * 100).toFixed(2)
+      : 0;
+
    // console.log({ dates, pities });
 
    return (
@@ -40,24 +48,26 @@ export function GachaGlobal({
          >
             <div className="flex flex-col gap-y-1">
                <div className="flex gap-x-2">
-                  <span className="font-bold">Convenes Total:</span>
-                  <span>{summary.total}</span>
+                  <span>{summary.players.toLocaleString()}</span>
+                  <span className="font-bold">Rovers logged</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">Worth:</span>
-                  <span>{summary.total * 160}</span>
+                  <span>{summary.total.toLocaleString()}</span>
+                  <span className="font-bold">Convenes rolled</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">Players:</span>
-                  <span>{summary.players}</span>
+                  <span>{(summary.total * 160).toLocaleString()}</span>
+                  <span className="font-bold">Gems used</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">Resonators:</span>
-                  <span>{summary.resonators}</span>
+                  <span className="font-bold">5★ Convenes:</span>
+                  <span>{summary.fiveStar}</span>
+                  <span>({fiveStarPercentage}%)</span>
                </div>
                <div className="flex gap-x-2">
-                  <span className="font-bold">Weapons:</span>
-                  <span>{summary.weapons}</span>
+                  <span className="font-bold">4★ Convenes:</span>
+                  <span>{summary.fourStar}</span>
+                  <span>({fourStarPercentage}%)</span>
                </div>
             </div>
          </div>
