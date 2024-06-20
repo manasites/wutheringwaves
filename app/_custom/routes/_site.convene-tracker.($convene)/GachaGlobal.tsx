@@ -34,6 +34,8 @@ export function GachaGlobal({
       ? summary.fiveStars[filters.resourceId]?.pities
       : summary.pities;
 
+   console.log(getPities({ summary, filters }));
+
    const dates = filters.resourceId
       ? summary.fiveStars[filters.resourceId]?.dates
       : summary.dates;
@@ -90,25 +92,22 @@ export function GachaGlobal({
             }
          />
          {pities && <PitiesChart pities={pities} />}
-         {/* {pities && <LineandBarChart pities={pities} />} */}
       </div>
    );
 }
 
-// function getPities({
-//    summary,
-//    resourceId,
-//    startDate,
-//    endDate,
-// }: {
-//    summary: GlobalSummaryType;
-//    resourceId: string | null;
-//    startDate: string;
-//    endDate: string;
-// }) {
-//    let pities: Record<string, number> = {};
-//    let dates: Record<string, number> = {};
-// }
+function getPities({
+   summary,
+   filters,
+}: {
+   summary: SerializeFrom<typeof loader>["globalSummary"];
+   filters: WuwaFiltersType;
+}) {
+   let pities: Record<string, number> = {};
+   let { resourceId, startDate, endDate } = filters;
+
+   return pities;
+}
 
 function FiveStars({
    fiveStars,
