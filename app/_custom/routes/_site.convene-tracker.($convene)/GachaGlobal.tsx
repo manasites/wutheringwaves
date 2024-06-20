@@ -34,11 +34,7 @@ export function GachaGlobal({
       ? summary.fiveStars[filters.resourceId]?.pities
       : summary.pities;
 
-   console.log(getPities({ summary, filters }));
-
-   const dates = filters.resourceId
-      ? summary.fiveStars[filters.resourceId]?.dates
-      : summary.dates;
+   // console.log(getPities({ summary, filters }));
 
    // display five star percentage in shape of #.##%
    const fiveStarPercentage = summary.fiveStar
@@ -78,20 +74,26 @@ export function GachaGlobal({
                </div>
             </div>
          </div>
+         <DatesChart dates={summary.dates} filters={filters} />
          <DateFilters
             versions={versions}
             filters={filters}
             setFilters={setFilters}
          />
-         {dates && <DatesChart dates={dates} filters={filters} />}
+         {pities && <PitiesChart pities={pities} />}
          <FiveStars
             fiveStars={summary.fiveStars}
             resourceId={filters.resourceId}
             onClick={(e) =>
-               setFilters({ ...filters, resourceId: e.currentTarget.value })
+               setFilters({
+                  ...filters,
+                  resourceId:
+                     e.currentTarget.value === filters.resourceId
+                        ? undefined
+                        : e.currentTarget.value,
+               })
             }
          />
-         {pities && <PitiesChart pities={pities} />}
       </div>
    );
 }
