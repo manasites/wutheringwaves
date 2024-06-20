@@ -13,6 +13,7 @@ import {
 import { GachaHistory } from "./_site.convene-tracker.($convene)/GachaHistory";
 import { GachaSummary } from "./_site.convene-tracker.($convene)/GachaSummary";
 import type { GachaSummaryType } from "./_site.convene-tracker.($convene)/getSummary";
+import { cache } from "~/utils/cache.server";
 
 export async function loader({
    context: { payload, user },
@@ -145,14 +146,14 @@ export async function action({
       ? addAandB<GachaSummaryType>(oldGlobalSummary, addToGlobal)
       : addToGlobal;
 
-   console.log({
-      id,
-      globalId,
-      oldPlayerSummary,
-      oldGlobalSummary,
-      addToGlobal,
-      newGlobalSummary,
-   });
+   // console.log({
+   //    id,
+   //    globalId,
+   //    oldPlayerSummary,
+   //    oldGlobalSummary,
+   //    addToGlobal,
+   //    newGlobalSummary,
+   // });
 
    try {
       // First we'll update the user record with the new summary
@@ -201,6 +202,9 @@ export async function action({
             // for public access we're overriding access control here
             overrideAccess: true,
          });
+
+         // purge cache of this global summary
+         cache.delete(globalId);
       } else {
          // insert new record
          await payload.create({
