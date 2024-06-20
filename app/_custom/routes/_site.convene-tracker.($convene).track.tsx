@@ -4,6 +4,8 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Await, defer, redirect, useLoaderData } from "@remix-run/react";
 import type { Payload } from "payload";
 
+import { cache } from "~/utils/cache.server";
+
 import {
    addAandB,
    type GlobalSummaryType,
@@ -13,7 +15,6 @@ import {
 import { GachaHistory } from "./_site.convene-tracker.($convene)/GachaHistory";
 import { GachaSummary } from "./_site.convene-tracker.($convene)/GachaSummary";
 import type { GachaSummaryType } from "./_site.convene-tracker.($convene)/getSummary";
-import { cache } from "~/utils/cache.server";
 
 export async function loader({
    context: { payload, user },
