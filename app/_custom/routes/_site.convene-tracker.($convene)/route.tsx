@@ -85,6 +85,7 @@ export async function loader({
    const globalSummary = await cacheThis(
       () => fetchSummary<GlobalSummaryType>("wuwa-convene-" + convene),
       "wuwa-convene-" + convene,
+      100,
    );
 
    // check user data for wuwa-url

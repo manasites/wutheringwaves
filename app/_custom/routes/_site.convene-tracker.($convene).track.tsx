@@ -5,9 +5,9 @@ import { Await, defer, redirect, useLoaderData } from "@remix-run/react";
 import type { Payload } from "payload";
 
 import {
-   addGlobalSummary,
+   addAandB,
    type GlobalSummaryType,
-   subGlobalSummary,
+   subAandB,
    toGlobal,
 } from "./_site.convene-tracker.($convene)/addToGlobal";
 import { GachaHistory } from "./_site.convene-tracker.($convene)/GachaHistory";
@@ -134,22 +134,25 @@ export async function action({
 
    // First we compare the old and new player record
    const addToGlobal = oldPlayerSummary
-      ? subGlobalSummary(toGlobal(summary), toGlobal(oldPlayerSummary))
+      ? subAandB<GachaSummaryType>(
+           toGlobal(summary),
+           toGlobal(oldPlayerSummary),
+        )
       : toGlobal(summary);
 
    // Then we calculate the new global summary
    const newGlobalSummary = oldGlobalSummary
-      ? addGlobalSummary(oldGlobalSummary, addToGlobal)
+      ? addAandB<GachaSummaryType>(oldGlobalSummary, addToGlobal)
       : addToGlobal;
 
-   // console.log({
-   //    id,
-   //    globalId,
-   //    oldPlayerSummary,
-   //    oldGlobalSummary,
-   //    addToGlobal,
-   //    newGlobalSummary,
-   // });
+   console.log({
+      id,
+      globalId,
+      oldPlayerSummary,
+      oldGlobalSummary,
+      addToGlobal,
+      newGlobalSummary,
+   });
 
    try {
       // First we'll update the user record with the new summary
