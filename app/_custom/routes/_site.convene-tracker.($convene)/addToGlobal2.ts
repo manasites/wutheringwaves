@@ -59,21 +59,22 @@ export function toGlobal(summary: GachaSummaryType) {
 export function addAandB<T>(a: Record<string, any>, b: Record<string, any>) {
    const result: Record<string, any> = { ...a };
 
-   for (const key of Object.keys(b)) {
-      if (b[key]) {
-         switch (typeof b[key]) {
+   Object.entries(b).forEach(([key, value]) => {
+      if (!a[key]) result[key] = value;
+      else {
+         switch (typeof value) {
             case "object":
-               result[key] = addAandB(a[key], b[key]);
+               result[key] = addAandB(a[key], value);
                break;
             case "number":
-               result[key] = (a[key] || 0) + b[key];
+               result[key] = (a[key] || 0) + (value || 0);
                break;
             default:
-               result[key] = b[key] || a[key];
+               result[key] = value || a[key];
                break;
          }
       }
-   }
+   });
 
    return result as T;
 }
@@ -82,21 +83,22 @@ export function addAandB<T>(a: Record<string, any>, b: Record<string, any>) {
 export function subAandB<T>(a: Record<string, any>, b: Record<string, any>) {
    const result: Record<string, any> = { ...a };
 
-   for (const key of Object.keys(b)) {
-      if (b[key]) {
-         switch (typeof b[key]) {
+   Object.entries(b).forEach(([key, value]) => {
+      if (!a[key]) result[key] = value;
+      else {
+         switch (typeof value) {
             case "object":
-               result[key] = subAandB(a[key], b[key]);
+               result[key] = subAandB(a[key], value);
                break;
             case "number":
-               result[key] = (a[key] || 0) - b[key];
+               result[key] = (a[key] || 0) - (value || 0);
                break;
             default:
-               result[key] = a[key] || b[key];
+               result[key] = value || a[key];
                break;
          }
       }
-   }
+   });
 
    return result as T;
 }
