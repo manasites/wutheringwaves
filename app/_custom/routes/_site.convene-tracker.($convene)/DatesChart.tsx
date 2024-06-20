@@ -10,6 +10,12 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 
+type WuwaFiltersType = {
+   startDate?: string;
+   endDate?: string;
+   resourceId?: string;
+};
+
 ChartJS.register(
    CategoryScale,
    LinearScale,
@@ -31,8 +37,14 @@ const options = {
    },
 };
 
-export function DatesChart({ dates }: { dates: Record<string, number> }) {
-   const labels = generateDatesLabels(dates);
+export function DatesChart({
+   dates,
+   filters,
+}: {
+   dates: Record<string, number>;
+   filters: WuwaFiltersType;
+}) {
+   const labels = generateDatesLabels({ dates, filters });
 
    // labels might be missing dates, fill in the gaps
    // [2021-01-01, 2021-01-03] => [2021-01-01, 2021-01-02, 2021-01-03]
@@ -52,10 +64,17 @@ export function DatesChart({ dates }: { dates: Record<string, number> }) {
    return <Line data={data} options={options} />;
 }
 
-function generateDatesLabels(dates: Record<string, number>) {
+function generateDatesLabels({
+   dates,
+   filters,
+}: {
+   dates: Record<string, number>;
+   filters: WuwaFiltersType;
+}) {
+   console.log(filters);
    let dateArray = Object.keys(dates);
-   let startDate = dateArray[0]!;
-   let endDate = dateArray[dateArray.length! - 1]!;
+   let startDate = filters?.startDate || dateArray[0]!;
+   let endDate = filters?.endDate || dateArray[dateArray.length! - 1]!;
 
    try {
       let start = new Date(startDate);
