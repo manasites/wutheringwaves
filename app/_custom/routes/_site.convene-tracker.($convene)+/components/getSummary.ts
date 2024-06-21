@@ -1,4 +1,4 @@
-import type { RollData } from "./route";
+import type { RollData } from "../_index";
 
 export type GachaSummaryType = {
    cardPoolType?: string;

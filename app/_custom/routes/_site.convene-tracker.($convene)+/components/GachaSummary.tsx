@@ -5,7 +5,7 @@ import { Image } from "~/components/Image";
 
 import { DatesChart } from "./DatesChart";
 import { type GachaSummaryType } from "./getSummary";
-import type { loader, RollData } from "./route";
+import type { loader, RollData } from "../_index";
 
 export function average(arr: Array<number>) {
    return arr.reduce((acc, curr) => acc + curr ?? 0, 0) / arr.length;

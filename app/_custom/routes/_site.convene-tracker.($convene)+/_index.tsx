@@ -26,9 +26,9 @@ import { Checkbox } from "~/components/Checkbox";
 import { H2 } from "~/components/Headers";
 import { cacheThis, fetchWithCache } from "~/utils/cache.server";
 
-import type { GlobalSummaryType } from "./addToGlobal";
-import { GachaGlobal } from "./GachaGlobal";
-import { getSummary } from "./getSummary";
+import type { GlobalSummaryType } from "./components/addToGlobal";
+import { GachaGlobal } from "./components/GachaGlobal";
+import { getSummary } from "./components/getSummary";
 
 export type RollData = {
    pity?: number;

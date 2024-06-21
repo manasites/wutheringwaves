@@ -3,19 +3,18 @@ import { Suspense } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Await, defer, redirect, useLoaderData } from "@remix-run/react";
 import type { Payload } from "payload";
-import { fetchWithCache } from "~/utils/cache.server";
 
-import { cache } from "~/utils/cache.server";
+import { fetchWithCache, cache } from "~/utils/cache.server";
 
 import {
    addAandB,
    type GlobalSummaryType,
    subAandB,
    toGlobal,
-} from "./_site.convene-tracker.($convene)/addToGlobal";
-import { GachaHistory } from "./_site.convene-tracker.($convene)/GachaHistory";
-import { GachaSummary } from "./_site.convene-tracker.($convene)/GachaSummary";
-import type { GachaSummaryType } from "./_site.convene-tracker.($convene)/getSummary";
+} from "./components/addToGlobal";
+import { GachaHistory } from "./components/GachaHistory";
+import { GachaSummary } from "./components/GachaSummary";
+import type { GachaSummaryType } from "./components/getSummary";
 
 export async function loader({
    context: { payload, user },
@@ -64,7 +63,7 @@ export async function loader({
 
    const itemImages = (
       await fetchWithCache<{ docs: any }>(
-         "http://localhost:4000/api/items?where[id][in]=3,50001,50002,50005"
+         "http://localhost:4000/api/items?where[id][in]=3,50001,50002,50005",
       )
    )?.docs;
 
@@ -107,7 +106,7 @@ export async function action({
    context: { user, payload },
 }: ActionFunctionArgs) {
    const { url, convene, summary, save, playerId, refresh } = JSON.parse(
-      await request.text()
+      await request.text(),
    ) as {
       url: string;
       convene: string;

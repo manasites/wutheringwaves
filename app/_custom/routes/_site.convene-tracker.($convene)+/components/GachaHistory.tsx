@@ -7,7 +7,7 @@ import { H2 } from "~/components/Headers";
 import { Image } from "~/components/Image";
 
 import type { GachaSummaryType } from "./getSummary";
-import type { loader, RollData } from "./route";
+import type { loader, RollData } from "../_index";
 
 type GachaToggles = {
    fourStar: boolean;
@@ -63,9 +63,7 @@ export function GachaHistory({ summary }: { summary: GachaSummaryType }) {
                Weapons
             </Checkbox>
          </div>
-         {gacha?.map((roll, int) => (
-            <ResultFrame roll={roll} key={int} />
-         ))}
+         {gacha?.map((roll, int) => <ResultFrame roll={roll} key={int} />)}
       </div>
    );
 }
