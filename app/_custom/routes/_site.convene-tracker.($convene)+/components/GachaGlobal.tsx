@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import type { SerializeFrom } from "@remix-run/node";
-import { useRouteLoaderData } from "@remix-run/react";
 
 import { Image } from "~/components/Image";
 
@@ -9,6 +8,7 @@ import { addAandB } from "./addToGlobal";
 import { DateFilters, DatesChart } from "./DatesChart";
 import { PitiesChart } from "./PitiesChart";
 import type { loader } from "../_index";
+import { useConveneLayoutData } from "../_layout";
 
 type WuwaFiltersType = {
    startDate?: string;
@@ -230,9 +230,7 @@ function WarpFrame({
    onClick: React.MouseEventHandler<HTMLButtonElement>;
    total: number;
 }) {
-   const { weapons, resonators } = useRouteLoaderData<typeof loader>(
-      "_custom/routes/_site.convene-tracker.($convene)/route",
-   )!;
+   const { weapons, resonators } = useConveneLayoutData();
 
    let entry =
       weapons?.find((w) => w.id == id) ??

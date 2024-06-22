@@ -16,16 +16,12 @@ import {
 } from "@remix-run/react";
 import { z } from "zod";
 
-import type {
-   ConveneType,
-   Resonator,
-   Weapon,
-} from "payload/generated-custom-types";
 import { Button } from "~/components/Button";
 import { Checkbox } from "~/components/Checkbox";
 import { H2 } from "~/components/Headers";
-import { cacheThis, fetchWithCache } from "~/utils/cache.server";
+import { cacheThis } from "~/utils/cache.server";
 
+import { useConveneLayoutData } from "./_layout";
 import type { GlobalSummaryType } from "./components/addToGlobal";
 import { GachaGlobal } from "./components/GachaGlobal";
 import { getSummary } from "./components/getSummary";
@@ -46,30 +42,6 @@ export async function loader({
    params,
    request,
 }: LoaderFunctionArgs) {
-   const resonators = (
-      await fetchWithCache<{ docs: Array<Resonator> }>(
-         "http://localhost:4000/api/resonators?limit=1000&sort=id&depth=2)",
-      )
-   )?.docs;
-
-   const weapons = (
-      await fetchWithCache<{ docs: Array<Weapon> }>(
-         "http://localhost:4000/api/weapons?limit=1000&sort=id&depth=2",
-      )
-   )?.docs;
-
-   const conveneTypes = (
-      await fetchWithCache<{ docs: Array<ConveneType> }>(
-         "http://localhost:4000/api/convene-types?limit=1000&sort=id&depth=2",
-      )
-   )?.docs;
-
-   const itemImages = (
-      await fetchWithCache<{ docs: Array<ConveneType> }>(
-         "http://localhost:4000/api/items?where[id][in]=3,50001,50002,50005",
-      )
-   )?.docs;
-
    const convene = params.convene || "1";
 
    // we'll avoid access control for global summary
@@ -103,11 +75,6 @@ export async function loader({
       : undefined;
 
    return defer({
-      resonators,
-      weapons,
-      conveneTypes,
-      convene: conveneTypes?.find((c) => c.id === convene),
-      itemImages,
       globalSummary,
       userData,
    });
@@ -124,12 +91,13 @@ function getCookie(name: string) {
 }
 
 export default function HomePage() {
-   const { convene } = useParams();
+   const { convene: conveneId } = useParams();
+   const { conveneTypes, itemImages } = useConveneLayoutData();
    const loaderData = useLoaderData<typeof loader>();
    const submit = useSubmit();
    const navigate = useNavigate();
 
-   // console.log(loaderData);
+   const convene = conveneTypes?.find((c) => c.id === conveneId);
 
    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
       // We want to fetch from the client, so submit it manually
@@ -162,20 +130,20 @@ export default function HomePage() {
             className="dark:text-zinc-100 mt-8 mb-3 p-3.5 leading-7 dark:bg-dark400 bg-zinc-50 block shadow-sm dark:shadow-zinc-800/70 border-zinc-200/70
       font-header relative text-lg scroll-mt-32 laptop:scroll-mt-60 rounded-l rounded-r-md py-2 overflow-hidden border shadow-zinc-50 dark:border-zinc-700 w-full"
             name="convene"
-            defaultValue={convene ?? "1"}
+            defaultValue={conveneId ?? "1"}
             onChange={(e) => navigate("/convene-tracker/" + e.target.value)}
          >
-            {loaderData?.conveneTypes?.map((convene) => (
+            {conveneTypes?.map((convene) => (
                <option key={convene.id} value={convene.id}>
                   {convene.name}
                </option>
             ))}
          </select>
-         <H2 text={`${loaderData.convene?.name ?? "Convene"} Global Stats`} />
+         <H2 text={`${convene?.name ?? "Convene"} Global Stats`} />
          {loaderData.globalSummary && (
             <GachaGlobal
                summary={loaderData.globalSummary}
-               images={loaderData.itemImages}
+               images={itemImages}
             />
          )}
          <H2 text="Import Convene History" />
@@ -214,7 +182,7 @@ export default function HomePage() {
                         <input
                            hidden
                            name="convene"
-                           defaultValue={convene ?? "1"}
+                           defaultValue={convene?.id ?? "1"}
                         />
                         <Button type="submit" value="Import">
                            Import
