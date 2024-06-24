@@ -97,7 +97,7 @@ export default function HomePage() {
    const submit = useSubmit();
    const navigate = useNavigate();
 
-   const convene = conveneTypes?.find((c) => c.id === conveneId);
+   const convene = conveneTypes?.find((c) => c.id === (conveneId ?? "1"));
 
    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
       // We want to fetch from the client, so submit it manually
@@ -139,14 +139,6 @@ export default function HomePage() {
                </option>
             ))}
          </select>
-         <H2 text={`${convene?.name ?? "Convene"} Global Stats`} />
-         {loaderData.globalSummary && (
-            <GachaGlobal
-               summary={loaderData.globalSummary}
-               images={itemImages}
-            />
-         )}
-         <H2 text="Import Convene History" />
          <Suspense
             fallback={
                <div className="flex items-center justify-center h-96">
@@ -206,6 +198,13 @@ export default function HomePage() {
                }}
             </Await>
          </Suspense>
+         <H2 text={`${convene?.name ?? "Convene"} Global Stats`} />
+         {loaderData.globalSummary && (
+            <GachaGlobal
+               summary={loaderData.globalSummary}
+               images={itemImages}
+            />
+         )}
 
          {/* <H2 text={loaderData.convene?.name ?? "Convene"} /> */}
          <Outlet />

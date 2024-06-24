@@ -85,13 +85,12 @@ export function GachaGlobal({
             <InfoColumn disp_cols={display_columns_1} />
             <InfoColumn disp_cols={display_columns_2} />
          </div>
-         <DatesChart dates={summary.dates} filters={filters} />
          <DateFilters
             versions={versions}
             filters={filters}
             setFilters={setFilters}
          />
-         {pities && <PitiesChart pities={pities} />}
+         <DatesChart dates={summary.dates} filters={filters} />
          <FiveStars
             resourceIds={resourceIds}
             resourceId={filters.resourceId}
@@ -105,6 +104,7 @@ export function GachaGlobal({
                })
             }
          />
+         {pities && <PitiesChart pities={pities} />}
       </div>
    );
 }
