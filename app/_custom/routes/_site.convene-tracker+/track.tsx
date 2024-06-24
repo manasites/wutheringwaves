@@ -4,8 +4,6 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Await, defer, redirect, useLoaderData } from "@remix-run/react";
 import type { Payload } from "payload";
 
-import { fetchWithCache, cache } from "~/utils/cache.server";
-
 import { useConveneLayoutData } from "./_layout";
 import {
    addAandB,
@@ -16,8 +14,6 @@ import {
 import { GachaHistory } from "./components/GachaHistory";
 import { GachaSummary } from "./components/GachaSummary";
 import type { GachaSummaryType } from "./components/getSummary";
-import { Button } from "~/components/Button";
-import { H2 } from "~/components/Headers";
 
 export async function loader({
    context: { payload, user },
