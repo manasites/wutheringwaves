@@ -55,5 +55,5 @@ export async function Layout() {
 // parent loader return shortcut, use this to grab wuwa data from the layout
 export const useConveneLayoutData = () =>
    useRouteLoaderData<typeof loader>(
-      "_custom/routes/_site.convene-tracker.($convene)+/_layout",
+      "_custom/routes/_site.convene-tracker+/_layout",
    )!;

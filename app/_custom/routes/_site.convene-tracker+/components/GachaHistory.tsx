@@ -7,7 +7,7 @@ import { H2 } from "~/components/Headers";
 import { Image } from "~/components/Image";
 
 import type { GachaSummaryType } from "./getSummary";
-import type { RollData } from "../_index";
+import type { RollData } from "../($convene)";
 import { useConveneLayoutData } from "../_layout";
 
 type GachaToggles = {

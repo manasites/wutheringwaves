@@ -1,4 +1,4 @@
-import type { RollData } from "../_index";
+import type { RollData } from "../($convene)";
 
 export type GachaSummaryType = {
    cardPoolType?: string;

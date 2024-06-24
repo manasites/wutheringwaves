@@ -7,7 +7,7 @@ import { Image } from "~/components/Image";
 import { addAandB } from "./addToGlobal";
 import { DateFilters, DatesChart } from "./DatesChart";
 import { PitiesChart } from "./PitiesChart";
-import type { loader } from "../_index";
+import type { loader } from "../($convene)";
 import { useConveneLayoutData } from "../_layout";
 
 type WuwaFiltersType = {

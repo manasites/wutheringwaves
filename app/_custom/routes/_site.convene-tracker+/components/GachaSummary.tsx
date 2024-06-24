@@ -5,7 +5,7 @@ import { Image } from "~/components/Image";
 
 import { DatesChart } from "./DatesChart";
 import { type GachaSummaryType } from "./getSummary";
-import type { RollData } from "../_index";
+import type { RollData } from "../($convene)";
 import { useConveneLayoutData } from "../_layout";
 
 export function average(arr: Array<number>) {

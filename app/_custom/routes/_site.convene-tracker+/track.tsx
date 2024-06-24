@@ -6,6 +6,7 @@ import type { Payload } from "payload";
 
 import { fetchWithCache, cache } from "~/utils/cache.server";
 
+import { useConveneLayoutData } from "./_layout";
 import {
    addAandB,
    type GlobalSummaryType,
@@ -61,20 +62,14 @@ export async function loader({
       ? fetchSummary<GachaSummaryType>("wuwa-" + playerId + "-" + convene)
       : null;
 
-   const itemImages = (
-      await fetchWithCache<{ docs: any }>(
-         "http://localhost:4000/api/items?where[id][in]=3,50001,50002,50005",
-      )
-   )?.docs;
-
    return defer({
       playerSummary,
-      itemImages,
    });
 }
 
 export default function ConveneTracker() {
-   const { playerSummary, itemImages } = useLoaderData<typeof loader>();
+   const { playerSummary } = useLoaderData<typeof loader>();
+   const { itemImages } = useConveneLayoutData();
 
    return (
       <Suspense
