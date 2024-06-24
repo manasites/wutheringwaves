@@ -1,9 +1,20 @@
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Await, defer, redirect, useLoaderData } from "@remix-run/react";
+import {
+   Await,
+   defer,
+   useLoaderData,
+   useNavigation,
+   useSubmit,
+} from "@remix-run/react";
 import type { Payload } from "payload";
+import { z } from "zod";
 
+import { Icon } from "~/components/Icon";
+import { cache } from "~/utils/cache.server";
+
+import type { RollData } from "./($convene)";
 import { useConveneLayoutData } from "./_layout";
 import {
    addAandB,
@@ -13,7 +24,7 @@ import {
 } from "./components/addToGlobal";
 import { GachaHistory } from "./components/GachaHistory";
 import { GachaSummary } from "./components/GachaSummary";
-import type { GachaSummaryType } from "./components/getSummary";
+import { getSummary, type GachaSummaryType } from "./components/getSummary";
 
 export async function loader({
    context: { payload, user },
@@ -57,6 +68,9 @@ export async function loader({
    const convenes = [0, 1, 2, 3, 4, 5, 6, 7];
 
    return defer({
+      userData,
+      wuwaURL,
+      playerId,
       ...convenes.map((convene) =>
          playerId && convene
             ? fetchSummary<GachaSummaryType>("wuwa-" + playerId + "-" + convene)
@@ -66,11 +80,13 @@ export async function loader({
 }
 
 export default function ConveneTracker() {
-   const convenes = useLoaderData<typeof loader>();
+   // @ts-expect-error
+   const { userData, wuwaURL, playerId, ...convenes } =
+      useLoaderData<typeof loader>();
    const { itemImages, conveneTypes } = useConveneLayoutData();
    const [convene, setConvene] = useState(1);
 
-   console.log(convene, conveneTypes);
+   const submit = useSubmit();
 
    return (
       <>
@@ -92,6 +108,7 @@ export default function ConveneTracker() {
                </Await>
             </button>
          ))}
+         <RefreshButton onClick={onSubmit} />
          <Suspense
             fallback={
                <div className="flex items-center justify-center h-96">
@@ -115,6 +132,88 @@ export default function ConveneTracker() {
          </Suspense>
       </>
    );
+
+   async function onSubmit(e: React.FormEvent<HTMLButtonElement>) {
+      // We want to fetch from the client, so submit it manually
+      e.preventDefault();
+
+      const url = wuwaURL;
+
+      const { save, refresh } = userData;
+
+      const convenes = ["1", "2", "3", "4", "5", "6", "7"];
+
+      await Promise.all(
+         convenes.map(
+            async (convene) =>
+               await getConveneData({ url, convene })
+                  .then((gacha: { data: Array<RollData> }) =>
+                     getSummary(gacha, convene),
+                  )
+                  .catch((error) => {
+                     console.error(error);
+                     return {};
+                  })
+                  .then((summary) =>
+                     submit(
+                        // @ts-ignore - should change the nulls to undefined
+                        {
+                           summary: summary,
+                           playerId,
+                           save,
+                           refresh,
+                           convene,
+                           url,
+                        },
+                        {
+                           method: "POST",
+                           action: "/convene-tracker/track",
+                           navigate: false,
+                           fetcherKey: "wuwa-convene-" + convene,
+                           encType: "application/json",
+                        },
+                     ),
+                  ),
+         ),
+      );
+
+      console.log("should be working!");
+   }
+}
+
+function RefreshButton({ onClick }: any) {
+   const [disableRefresh, setDisableRefresh] = useState<boolean>(true);
+   const navigation = useNavigation();
+
+   useEffect(() => {
+      // Turn disableRefresh false after 60 seconds
+      setTimeout(() => {
+         setDisableRefresh(false);
+      }, 60 * 1000);
+
+      // Disable Refresh if already submitting
+      if (navigation.state !== "idle") setDisableRefresh(true);
+   }, [navigation.state]);
+
+   return (
+      <button
+         disabled={disableRefresh}
+         onClick={onClick}
+         type="submit"
+         className="border-color shadow-1 absolute left-2/3 z-20 flex -translate-x-1/2 transform
+            items-center gap-2.5 rounded-b-xl border-2 bg-white py-2.5 pl-5 pr-6 text-sm font-bold
+            shadow disabled:opacity-50 dark:bg-zinc-800 max-desktop:mt-[1px] max-desktop:border-t-0 desktop:mt-1 desktop:rounded-full"
+         aria-label={disableRefresh ? "On cooldown..." : "Refresh"}
+         title={disableRefresh ? "On cooldown..." : "Refresh"}
+      >
+         {disableRefresh ? (
+            <Icon name="hourglass" size={18} />
+         ) : (
+            <Icon name="refresh-ccw" size={18} />
+         )}
+         <span>Refresh</span>
+      </button>
+   );
 }
 
 export async function action({
@@ -131,6 +230,8 @@ export async function action({
       summary: GachaSummaryType;
       playerId: string;
    };
+
+   // console.log(convene, summary);
 
    const id = "wuwa-" + playerId + "-" + convene;
    const globalId = "wuwa-convene-" + convene;
@@ -261,12 +362,14 @@ export async function action({
       refresh,
    });
 
+   return null;
+
    // redirect and set url to cookie
-   return redirect(`/convene-tracker/${convene}/track#track`, {
-      headers: {
-         "Set-Cookie": `wuwa-url=${url}; Path=/; Max-Age=31536000; SameSite=Strict`,
-      },
-   });
+   // return redirect(`/convene-tracker/${convene}/track#track`, {
+   //    headers: {
+   //       "Set-Cookie": `wuwa-url=${url}; Path=/; Max-Age=31536000; SameSite=Strict`,
+   //    },
+   // });
 }
 
 async function updateUserData(user: any, payload: Payload, data: any) {
@@ -295,5 +398,64 @@ async function updateUserData(user: any, payload: Payload, data: any) {
          user,
          overrideAccess: false,
       });
+   }
+}
+
+const WuwaPayloadSchema = z.object({
+   playerId: z.string(),
+   serverId: z.string(),
+   languageCode: z.string(),
+   cardPoolType: z.string(),
+   recordId: z.string(),
+});
+
+// we'll fetch the data on the client side then save it to the server
+export async function getConveneData({
+   url,
+   convene,
+}: {
+   url: FormDataEntryValue | undefined;
+   convene: string;
+}) {
+   if (!url) return { error: "No URL provided" };
+
+   try {
+      const searchParams = new URLSearchParams(url?.toString().split("?")?.[1]);
+
+      const wuwaPayload = WuwaPayloadSchema.parse({
+         playerId: searchParams.get("player_id"),
+         serverId: searchParams.get("svr_id"),
+         languageCode: searchParams.get("lang"),
+         cardPoolType: convene ?? "1",
+         recordId: searchParams.get("record_id"),
+      });
+
+      const response = await fetch(
+         "https://gmserver-api.aki-game2.net/gacha/record/query",
+         {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json",
+            },
+            body: JSON.stringify(wuwaPayload),
+         },
+      );
+
+      return await response.json();
+
+      // const summary = getSummary(gacha, convene);
+
+      // return {
+      //    gacha,
+      //    summary,
+      //    playerId: wuwaPayload.playerId,
+      //    convene,
+      //    refresh,
+      //    save,
+      //    url,
+      // };
+   } catch (e) {
+      console.error(e);
+      return e;
    }
 }
