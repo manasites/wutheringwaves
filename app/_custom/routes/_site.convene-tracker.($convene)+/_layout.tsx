@@ -40,10 +40,6 @@ export async function loader({
       )
    )?.docs;
 
-   const convene = params.convene || "1";
-
-   console.log({ params, convene });
-
    return json({
       resonators,
       weapons,
