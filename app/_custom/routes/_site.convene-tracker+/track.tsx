@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Await, defer, redirect, useLoaderData } from "@remix-run/react";
@@ -16,14 +16,14 @@ import {
 import { GachaHistory } from "./components/GachaHistory";
 import { GachaSummary } from "./components/GachaSummary";
 import type { GachaSummaryType } from "./components/getSummary";
+import { Button } from "~/components/Button";
+import { H2 } from "~/components/Headers";
 
 export async function loader({
    context: { payload, user },
    params,
    request,
 }: LoaderFunctionArgs) {
-   const convene = params.convene || "1";
-
    // we'll avoid access control for global summary
    async function fetchSummary<T>(id: string) {
       try {
@@ -58,41 +58,66 @@ export async function loader({
       ? new URLSearchParams(wuwaURL)?.get("player_id")
       : null;
 
-   const playerSummary = playerId
-      ? fetchSummary<GachaSummaryType>("wuwa-" + playerId + "-" + convene)
-      : null;
+   const convenes = [0, 1, 2, 3, 4, 5, 6, 7];
 
    return defer({
-      playerSummary,
+      ...convenes.map((convene) =>
+         playerId && convene
+            ? fetchSummary<GachaSummaryType>("wuwa-" + playerId + "-" + convene)
+            : null,
+      ),
    });
 }
 
 export default function ConveneTracker() {
-   const { playerSummary } = useLoaderData<typeof loader>();
-   const { itemImages } = useConveneLayoutData();
+   const convenes = useLoaderData<typeof loader>();
+   const { itemImages, conveneTypes } = useConveneLayoutData();
+   const [convene, setConvene] = useState(1);
+
+   console.log(convene, conveneTypes);
 
    return (
-      <Suspense
-         fallback={
-            <div className="flex items-center justify-center h-96">
-               <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
-            </div>
-         }
-      >
-         <Await resolve={playerSummary}>
-            {(playerSummary) => (
-               <>
-                  {playerSummary && (
-                     <GachaSummary
-                        summary={playerSummary}
-                        images={itemImages}
-                     />
-                  )}
-                  {playerSummary && <GachaHistory summary={playerSummary} />}
-               </>
-            )}
-         </Await>
-      </Suspense>
+      <>
+         {conveneTypes?.map((current) => (
+            <button
+               key={current.id}
+               value={current.id}
+               onClick={() => setConvene(parseInt(current.id))}
+               className={`w-full relative isolate inline-flex items-center justify-center mx-0.5 gap-x-2 rounded-lg border text-base/6 font-semibold px-[calc(theme(spacing[3.5])-1px)] py-[calc(theme(spacing[2.5])-1px)] tablet:px-[calc(theme(spacing.3)-1px)] tablet:py-[calc(theme(spacing[1.5]))] tablet:text-tablet/6 focus:outline-none data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-offset-2 data-[focus]:outline-blue-500 data-[disabled]:opacity-50 [&>[data-slot=icon]]:-mx-0.5 [&>[data-slot=icon]]:my-0.5 [&>[data-slot=icon]]:size-5 [&>[data-slot=icon]]:shrink-0 [&>[data-slot=icon]]:text-[--btn-icon] [&>[data-slot=icon]]:tablet:my-1 [&>[data-slot=icon]]:tablet:size-4 forced-colors:[--btn-icon:ButtonText] forced-colors:data-[hover]:[--btn-icon:ButtonText] border-zinc-950/10 text-zinc-950 data-[active]:bg-zinc-950/[2.5%] data-[hover]:bg-zinc-950/[2.5%] dark:border-white/15 dark:text-white dark:[--btn-bg:transparent] dark:data-[active]:bg-white/5 dark:data-[hover]:bg-white/5 [--btn-icon:theme(colors.zinc.500)] data-[active]:[--btn-icon:theme(colors.zinc.700)] data-[hover]:[--btn-icon:theme(colors.zinc.700)] dark:data-[active]:[--btn-icon:theme(colors.zinc.400)] dark:data-[hover]:[--btn-icon:theme(colors.zinc.400)] cursor-pointer ${
+                  parseInt(current.id) === convene && "bg-orange-500/10"
+               }`}
+            >
+               {current.name}
+               <Await resolve={convenes[parseInt(current.id)]}>
+                  {(playerSummary) =>
+                     playerSummary &&
+                     ` (5* ${playerSummary.pity5}/80, 4* ${playerSummary.pity4}/10)`
+                  }
+               </Await>
+            </button>
+         ))}
+         <Suspense
+            fallback={
+               <div className="flex items-center justify-center h-96">
+                  <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
+               </div>
+            }
+         >
+            <Await resolve={convenes[convene]}>
+               {(playerSummary) => (
+                  <>
+                     {playerSummary && (
+                        <GachaSummary
+                           summary={playerSummary}
+                           images={itemImages}
+                        />
+                     )}
+                     {playerSummary && <GachaHistory summary={playerSummary} />}
+                  </>
+               )}
+            </Await>
+         </Suspense>
+      </>
    );
 }
 

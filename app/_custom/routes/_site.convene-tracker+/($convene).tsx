@@ -65,7 +65,7 @@ export async function loader({
       "wuwa-convene-" + convene,
    );
 
-   // check user data for wuwa-url
+   // check user data for wuwa-url, this is deferred to the client to avoid blocking render
    const userData = user
       ? fetchSummary<{
            url: string;
