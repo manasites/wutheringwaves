@@ -1,16 +1,18 @@
-app = ""
+app = "mana-typesense"
 primary_region = "sjc"
 kill_signal = "SIGINT"
 kill_timeout = "5s"
 
 [build]
-  dockerfile = "custom.Dockerfile"
+  dockerfile = "typesense.Dockerfile"
 
 [env]
-  PORT = "4000"
+  TYPESENSE_DATA_DIR= "/typesense-data"
+  TYPESENSE_ENABLE_CORS= "true"
+  TYPESENSE_API_KEY=""
 
 [http_service]
-  internal_port = 4000
+  internal_port = 8108
   force_https = true
   auto_stop_machines = "suspend"
   auto_start_machines = true
@@ -25,3 +27,7 @@ kill_timeout = "5s"
   cpu_kind = "shared"
   cpus = 1
   memory_mb = 1024
+
+[mounts]
+  source = "typesense_data"
+  destination = "/typesense-data"
