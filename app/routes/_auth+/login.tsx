@@ -15,7 +15,6 @@ import {
    useSearchParams,
 } from "@remix-run/react";
 import * as cookie from "cookie";
-import { useTranslation } from "react-i18next";
 import { useZorm } from "react-zorm";
 import { jsonWithError, jsonWithSuccess, redirectWithError } from "remix-toast";
 import { z } from "zod";
@@ -34,7 +33,8 @@ import { Icon } from "~/components/Icon";
 import { Input } from "~/components/Input";
 import { type FormResponse, isAdding, isProcessing } from "~/utils/form";
 import { assertIsPost, safeRedirect } from "~/utils/http.server";
-import { i18nextServer } from "~/utils/i18n/i18next.server";
+
+import { getSiteSlug } from "../_site+/_utils/getSiteSlug.server";
 
 const LoginFormSchema = z.object({
    email: z
@@ -53,25 +53,37 @@ const PasswordResetSchema = z.object({
 });
 
 export async function loader({
-   context: { user },
+   context: { user, payload },
    request,
 }: LoaderFunctionArgs) {
    if (user) {
       return redirect("/");
    }
-   const t = await i18nextServer.getFixedT(request, "auth");
-   const title = t("login.title");
+
+   const { siteSlug } = await getSiteSlug(request, payload, user);
+
+   const sites = await payload.find({
+      collection: "sites",
+      where: {
+         slug: {
+            equals: siteSlug,
+         },
+      },
+      user,
+   });
+
+   const site = sites?.docs[0];
 
    const { email } = zx.parseQuery(request, {
       email: z.string().email().optional(),
    });
 
-   return json({ title, email });
+   return json({ email, site });
 }
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
    return [
       {
-         title: `${data?.title} - Mana`,
+         title: `Login - ${data?.site?.name ?? "Mana"}`,
       },
    ];
 };
@@ -86,7 +98,6 @@ export default function Login() {
    const redirectTo = searchParams.get("redirectTo") ?? undefined;
    const transition = useNavigation();
    const disabled = isProcessing(transition.state);
-   const { t } = useTranslation("auth");
    const adding = isAdding(transition, "login");
    const addingPasswordRest = isAdding(transition, "reset-password");
    const { email } = useLoaderData<typeof loader>() || {};
@@ -119,7 +130,7 @@ export default function Login() {
             </div>
          ) : (
             <div className="border-color-sub mb-6 border-b-2 pb-4 text-center text-xl font-bold">
-               {t("login.title")}
+               Login{" "}
             </div>
          )}
          {isReset ? (
@@ -127,7 +138,7 @@ export default function Login() {
                <Form ref={zoPW.ref} method="post" className="space-y-6" replace>
                   <Fieldset>
                      <Field>
-                        <Label>{t("login.email")}</Label>
+                        <Label>Email address</Label>
                         <Input
                            autoFocus={true}
                            autoComplete="email"
@@ -148,7 +159,7 @@ export default function Login() {
                      className="text-sm"
                      disabled={disabled}
                   >
-                     {addingPasswordRest ? <DotLoader /> : t("pwReset.title")}
+                     {addingPasswordRest ? <DotLoader /> : "Reset Password"}
                   </Button>
                </Form>
             </>
@@ -158,7 +169,7 @@ export default function Login() {
                   <Fieldset>
                      <FieldGroup>
                         <Field>
-                           <Label>{t("login.email")}</Label>
+                           <Label>Email address</Label>
                            <Input
                               autoFocus={email ? false : true}
                               autoComplete="email"
@@ -172,7 +183,7 @@ export default function Login() {
                            ))}
                         </Field>
                         <Field>
-                           <Label>{t("login.password")}</Label>
+                           <Label>Password</Label>
                            <Input
                               type="password"
                               autoComplete="current-password"
@@ -205,11 +216,11 @@ export default function Login() {
                      className="w-full h-10 cursor-pointer"
                      disabled={disabled}
                   >
-                     {adding ? <DotLoader /> : t("login.action")}
+                     {adding ? <DotLoader /> : "Log in"}
                   </Button>
                   <div className="flex items-center justify-center">
                      <div className="text-center text-sm">
-                        {t("login.dontHaveAccount")}
+                        Don't have an account?
                         <Link
                            className="pl-1 text-blue-500 hover:underline"
                            to={{
@@ -217,7 +228,7 @@ export default function Login() {
                               search: searchParams.toString(),
                            }}
                         >
-                           {t("login.signUp")}
+                           Sign up
                         </Link>
                      </div>
                   </div>

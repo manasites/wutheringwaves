@@ -8,8 +8,6 @@ import {
    Transition,
 } from "@headlessui/react";
 import { Link, useFetcher, useLoaderData } from "@remix-run/react";
-import clsx from "clsx";
-import { useTranslation } from "react-i18next";
 import { InstantSearch } from "react-instantsearch";
 
 import { DotLoader } from "~/components/DotLoader";
@@ -24,6 +22,7 @@ import type { loader as siteLoaderType } from "~/routes/_site+/_layout";
 import { isAdding } from "~/utils/form";
 
 import { MenuTrayContent, MobileTray } from "./MobileTray";
+import { DarkModeToggle } from "../action+/theme-toggle";
 import { searchClient } from "../search/_search";
 import { Autocomplete } from "../search/components/Autocomplete";
 
@@ -39,12 +38,11 @@ export function SiteHeader({
    const fetcher = useFetcher({ key: "site" });
 
    const adding = isAdding(fetcher, "followSite");
-   const { t } = useTranslation(["site", "auth"]);
 
    return (
       <section
-         className="z-30 w-full laptop:z-50 fixed max-laptop:top-[56px] shadow-sm dark:shadow-zinc-900/30
-        laptop:sticky laptop:top-0 dark:bg-dark350 bg-white border-color border-b border-zinc-200/50"
+         className="z-30 w-full laptop:z-50 max-laptop:top-0 shadow-sm dark:shadow-zinc-900/30
+        sticky top-0 dark:bg-dark350 bg-white border-color border-b border-zinc-200/50"
       >
          <div
             className="pattern-dots absolute left-0
@@ -53,11 +51,7 @@ export function SiteHeader({
             pattern-size-1 dark:pattern-zinc-500 dark:pattern-bg-bg3Dark"
          />
          <div className="relative mx-auto w-full laptop:max-w-[732px] laptop:rounded-b-2xl">
-            <div
-               className={clsx(
-                  "h-[60px] relative mx-auto flex items-center justify-between",
-               )}
-            >
+            <div className="h-[60px] relative mx-auto flex items-center justify-between">
                <>
                   <div className="flex items-center truncate max-laptop:pl-3">
                      <Link
@@ -67,16 +61,15 @@ export function SiteHeader({
                      >
                         <div
                            className="dark:bg-dark450 border dark:border-zinc-600 shadow-1 bg-zinc-50 overflow-hidden flex-none
-                              text-1 flex h-10 w-10 items-center justify-center dark:group-hover:border-zinc-600 border-zinc-300/60
-                              rounded-full shadow-sm transition duration-300 active:translate-y-0.5 group-hover:border-zinc-300"
+                              text-1 flex size-11 items-center justify-center dark:group-hover:border-zinc-600 border-zinc-300/60
+                              rounded-xl shadow-sm transition duration-300 active:translate-y-0.5 group-hover:border-zinc-300"
                         >
                            {site?.icon?.url ? (
                               <Image
-                                 width={40}
-                                 height={40}
-                                 //@ts-ignore
+                                 width={88}
+                                 height={88}
                                  url={site.icon?.url}
-                                 options="aspect_ratio=1:1&height=120&width=120"
+                                 options="aspect_ratio=1:1"
                                  alt="Site Logo"
                               />
                            ) : (
@@ -181,7 +174,7 @@ export function SiteHeader({
                                                p-2 font-bold hover:bg-zinc-100 hover:dark:bg-zinc-700/50"
                                              >
                                                 <div className="flex-grow">
-                                                   {t("follow.actionUnfollow")}
+                                                   Unfollow
                                                 </div>
                                                 <Icon
                                                    size={14}
@@ -201,7 +194,6 @@ export function SiteHeader({
                         <div className="flex items-center">
                            <Link
                               // prefetch="intent"
-                              reloadDocument={true}
                               to={`/login?redirectTo=/`}
                               className="flex h-9 items-center justify-center rounded-full bg-zinc-700 px-3.5
                         text-sm font-bold text-white dark:bg-white dark:text-black max-laptop:hidden"
@@ -225,14 +217,13 @@ export function SiteHeader({
                               className="flex h-9 items-center justify-center rounded-full bg-black shadow dark:shadow-zinc-950
                                  w-[72px] text-sm font-bold text-white dark:bg-white dark:text-black max-laptop:hidden shadow-zinc-400"
                            >
-                              {adding ? (
-                                 <DotLoader />
-                              ) : (
-                                 t("follow.actionFollow")
-                              )}
+                              {adding ? <DotLoader /> : "Follow"}
                            </button>
                         </div>
                      </NotFollowingSite>
+                     <div className="laptop:!hidden">
+                        <DarkModeToggle className="size-5" />
+                     </div>
                      <div className="flex items-center justify-center gap-2 hover:border-zinc-400 shadow-sm bg-zinc-100 dark:bg-dark500 border border-zinc-300 dark:border-zinc-500 dark:hover:border-zinc-400 rounded-full size-10">
                         <InstantSearch searchClient={searchClient}>
                            <Autocomplete site={site} />

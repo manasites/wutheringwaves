@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import { Link, useFetcher, useLocation } from "@remix-run/react";
 import clsx from "clsx";
-import { useTranslation } from "react-i18next";
 
 import { Avatar, AvatarButton } from "~/components/Avatar";
 import { Icon } from "~/components/Icon";
@@ -17,7 +16,6 @@ import { MobileTray } from "./MobileTray";
 export function MobileHeader() {
    const { user, following } = useRootLoaderData();
 
-   const { t } = useTranslation(["site", "auth"]);
    const fetcher = useFetcher({ key: "site" });
    const adding = isAdding(fetcher, "followSite");
    const location = useLocation();
@@ -31,8 +29,8 @@ export function MobileHeader() {
    return (
       <>
          <header
-            className="dark:bg-dark350 bg-white dark:border-zinc-700 laptop:dark:border-zinc-700/20 dark:shadow-zinc-800 fixed top-0 z-30 flex 
-                        h-14 w-full items-center justify-between border-b px-3 laptop:shadow-sm laptop:hidden"
+            className="dark:bg-dark350 bg-white dark:border-zinc-700 laptop:dark:border-zinc-700/20 dark:shadow-zinc-800 z-30 flex 
+                        h-14 w-full relative items-center justify-between border-b px-3 laptop:shadow-sm laptop:hidden"
          >
             <LoggedIn>
                <div className="flex w-full flex-none items-center justify-between gap-3 laptop:hidden">
@@ -85,7 +83,7 @@ export function MobileHeader() {
                                        className="mx-auto h-5 w-5 animate-spin"
                                     />
                                  ) : (
-                                    t("follow.actionFollow")
+                                    "Follow"
                                  )}
                               </button>
                            </div>
@@ -138,7 +136,7 @@ export function MobileHeader() {
                                     rotate-45 transform rounded-lg bg-teal-500 opacity-30 transition duration-500 group-hover:rotate-90"
                      ></span>
                      <span className="relative text-xs font-bold uppercase text-white">
-                        {t("login.signUp", { ns: "auth" })}
+                        Sign up
                      </span>
                   </Link>
                   <Link
@@ -147,7 +145,7 @@ export function MobileHeader() {
                                  text-xs font-bold uppercase"
                      to={`/login?redirectTo=${location.pathname}`}
                   >
-                     {t("login.action", { ns: "auth" })}
+                     Log in
                   </Link>
                </div>
             </LoggedOut>
@@ -211,7 +209,6 @@ export function MobileHeader() {
                         </div>
                      )}
                      <Link
-                        reloadDocument={true}
                         className="my-4 rounded-xl bg-zinc-800 px-5 py-3
                         text-center text-sm font-bold text-white dark:bg-zinc-200 dark:text-zinc-700"
                         to="https://mana.wiki"

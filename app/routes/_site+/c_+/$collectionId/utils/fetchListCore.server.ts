@@ -1,9 +1,8 @@
 import type { Payload } from "payload";
-import qs from "qs";
 
 import type { RemixRequestContext } from "remix.env";
-import { cacheThis, fetchWithCache } from "~/utils/cache.server";
-import { authRestFetcher } from "~/utils/fetchers.server";
+import { cacheThis, gql } from "~/utils/cache.server";
+import { gqlFormat, gqlFetch } from "~/utils/fetchers.server";
 
 export async function fetchListCore({
    request,
@@ -34,7 +33,6 @@ export async function fetchListCore({
            depth: 1,
            overrideAccess: false,
            user,
-           limit: 5000,
         })
       : await cacheThis(
            () =>
@@ -51,7 +49,6 @@ export async function fetchListCore({
                  depth: 1,
                  overrideAccess: false,
                  user,
-                 limit: 5000,
               }),
            `list-collection-${siteSlug}-${collectionId}`,
         );
@@ -60,32 +57,36 @@ export async function fetchListCore({
 
    // Get custom collection list data
    if (collectionEntry?.customDatabase) {
-      const searchParams = new URL(request.url).search;
+      const label = gqlFormat(collectionEntry?.slug as string, "list");
 
-      const page = qs.parse(searchParams, { ignoreQueryPrefix: true })?.page;
+      const LIST_QUERY = gql`
+         query {
+            listData: ${label}(limit:12000) {
+               totalDocs
+               docs {
+                  id
+                  slug
+                  name
+                  icon {
+                     id
+                     url
+                  }
+               }
+            }
+         }
+      `;
 
-      const preparedQuery = `${page ? `&page=${page}` : ""}`;
+      //@ts-ignore
+      const { listData } = await gqlFetch({
+         isCustomDB: true,
+         isCached: user ? false : true,
+         query: LIST_QUERY,
+         request,
+      });
 
-      const restPath = `http://localhost:4000/api/${collectionEntry.slug}${
-         preparedQuery ? `?${preparedQuery}&` : "?"
-      }depth=1&limit=5000`;
-
-      const { docs } = user
-         ? await authRestFetcher({
-              method: "GET",
-              path: restPath,
-           })
-         : await fetchWithCache(restPath);
-
-      const filteredDocs = docs.map((entry: any) => ({
-         id: entry.id,
-         name: entry.name,
-         slug: entry.slug,
-         icon: {
-            url: entry.icon?.url,
-         },
-      }));
-      return { listData: { docs: filteredDocs } };
+      if (listData) {
+         return { listData: { docs: listData?.docs } };
+      }
    }
 
    //Otherwise pull data from core

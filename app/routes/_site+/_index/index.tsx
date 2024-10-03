@@ -28,24 +28,28 @@ export async function loader({
    request,
 }: LoaderFunctionArgs) {
    const { siteSlug } = await getSiteSlug(request, payload, user);
-   const { page } = zx.parseQuery(request, {
+   const { page, updates } = zx.parseQuery(request, {
       page: z.coerce.number().optional(),
+      updates: z.coerce.number().optional(),
    });
 
-   const updateResults = await fetchHomeUpdates({
-      payload,
-      siteSlug,
-      user,
-      request,
-   });
-
-   const { home, homeContentId, isChanged, versions } = await fetchHomeContent({
-      page,
-      payload,
-      siteSlug,
-      user,
-      request,
-   });
+   const [{ home, homeContentId, isChanged, versions }, updateResults] =
+      await Promise.all([
+         fetchHomeContent({
+            page,
+            payload,
+            siteSlug,
+            user,
+            request,
+         }),
+         fetchHomeUpdates({
+            payload,
+            siteSlug,
+            user,
+            request,
+            updatesPage: updates,
+         }),
+      ]);
 
    return json({
       home,
@@ -69,7 +73,7 @@ export default function SiteIndexMain() {
          <main
             className={clsx(
                hasAccess ? "laptop:pb-32" : "laptop:pb-14",
-               "max-tablet:px-3 pt-20 laptop:pt-6 relative ",
+               "max-tablet:px-3 pt-4 laptop:pt-6 relative ",
             )}
          >
             {hasAccess ? (
